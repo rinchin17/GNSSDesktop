@@ -31,7 +31,7 @@
 					<div class="col-4 form-group">
 						<button class="btn btn-outline-secondary">Connect <span class="fa fa-plug"></span></button>
 					</div>
-					<!-- <div class="col-1 mr-4"></div> -->
+
 					<div class="col-4 ml-3 form-group">
 						<button id="setup" class="btn btn-secondary"><span class="fa fa-cog"></span> Device Setup</button>
 					</div>
@@ -41,26 +41,56 @@
 					<div class="col-8">
 						<div class="row">
 							<div class="col-6">
-								<input type="text" class="form-control" placeholder="Date">
+								<div class="input-group mb-2">
+									<div class="input-group-prepend">
+									  <div class="input-group-text"><span class="fa fa-calendar"></span></div>
+									</div>
+									<input type="text" class="form-control" id="date" placeholder="Date" disabled>
+								  </div>
 							</div>
 							<div class="col-6">
-								<input type="text" class="form-control" placeholder="Time">
+								<div class="input-group mb-2">
+									<div class="input-group-prepend">
+									  <div class="input-group-text"><span class="fa fa-clock-o"></span></div>
+									</div>
+									<input type="text" class="form-control" id="time" placeholder="Time" disabled>
+								  </div>
 							</div>
 						</div>
 						<div class="row mt-2">
 							<div class="col-6">
-								<input type="text" class="form-control" placeholder="Latitude">
+								<div class="input-group mb-2">
+									<div class="input-group-prepend">
+									  <div class="input-group-text"><span class="fa fa-arrow-up"></span></div>
+									</div>
+									<input type="text" class="form-control" id="latitude" placeholder="Latitude" disabled>
+								  </div>
 							</div>
 							<div class="col-6">
-								<input type="text" class="form-control" placeholder="Longitude">
+								<div class="input-group mb-2">
+									<div class="input-group-prepend">
+									  <div class="input-group-text"><span class="fa fa-arrow-right"></span></div>
+									</div>
+									<input type="text" class="form-control" id="longitude" placeholder="Longitude" disabled>
+								  </div>
 							</div>
 						</div>
 						<div class="row mt-2">
 							<div class="col-6">
-								<input type="text" class="form-control" placeholder="HDOP">
+								<div class="input-group mb-2">
+									<div class="input-group-prepend">
+									  <div class="input-group-text"><small>*</small></div>
+									</div>
+									<input type="text" class="form-control" id="hdop" placeholder="HDOP" disabled>
+								  </div>
 							</div>
 							<div class="col-6">
-								<input type="text" class="form-control" placeholder="Speed">
+								<div class="input-group mb-2">
+									<div class="input-group-prepend">
+									  <div class="input-group-text"><span class="fa fa-spinner"></span></div>
+									</div>
+									<input type="text" class="form-control" id="speed" placeholder="Speed" disabled>
+								  </div>
 							</div>
 						</div>
 					</div>
@@ -82,13 +112,28 @@
 
 				<div class="row mt-2">
 					<div class="col-4">
-						<input type="text" class="form-control" placeholder="RTK Status">
+						<div class="input-group mb-2">
+							<div class="input-group-prepend">
+							  <div class="input-group-text">@</div>
+							</div>
+							<input type="text" class="form-control" id="rtkStatus" placeholder="RTK Status" disabled>
+						  </div>
 					</div>
 					<div class="col-4">
-						<input type="text" class="form-control" placeholder="RTK Age">
+						<div class="input-group mb-2">
+							<div class="input-group-prepend">
+							  <div class="input-group-text">#</div>
+							</div>
+							<input type="text" class="form-control" id="rtkAge" placeholder="RTK Age" disabled>
+						  </div>
 					</div>
 					<div class="col-4">
-						<input type="text" class="form-control" placeholder="RTK Ratio">
+						<div class="input-group mb-2">
+							<div class="input-group-prepend">
+							  <div class="input-group-text">:</div>
+							</div>
+							<input type="text" class="form-control" id="rtkRatio" placeholder="RTK Ratio" disabled>
+						  </div>
 					</div>
 				</div>
 
@@ -118,26 +163,25 @@
     </div>
 
 	<script>
-		const electron = require('electron');
-		const { ipcRenderer } = electron;
+		const { ipcRenderer } = require('electron');
 
 		//Menu selectors
 		document.querySelector('#device').addEventListener('click', (event) => {
 			ipcRenderer.send('open:device');
 		});
 		document.querySelector('#download').addEventListener('click', (event) => {
-			ipcRenderer.send('open:download')
+			ipcRenderer.send('open:download');
 		});
 		document.querySelector('#map').addEventListener('click', (event) => {
-			ipcRenderer.send('open:map')
+			ipcRenderer.send('open:map');
 		});
 		document.querySelector('#settings').addEventListener('click', (event) => {
-			ipcRenderer.send('open:settings')
+			ipcRenderer.send('open:settings');
 		});
 
 		//Device setup
 		document.querySelector('#setup').addEventListener('click', (event) => {
-			ipcRenderer.send('device:setup')
+			ipcRenderer.send('device:setup');
 		});
 
 	</script>
