@@ -20,7 +20,7 @@ const createWindow = () => {
   });
 
   // mainWindow.menuBarVisible = false;
-  mainWindow.loadFile(path.join(__dirname, 'templates/map_tracker.html'));
+  mainWindow.loadFile(path.join(__dirname, 'templates/index.html'));
 
 };
 
@@ -65,7 +65,17 @@ ipcMain.on('device:setup',(event) => {
 ipcMain.on('open:map',(event) => {
   file = 'map_tracker.html';
   title = 'Map Tracker';
+
+  childWindow = new BrowserWindow({
+    webPreferences: {
+      nodeIntegration: true
+    },
+    title: title,
+    parent: mainWindow
+  });
+  childWindow.maximize();
+  childWindow.loadFile(path.join(__dirname, `templates/${file}`));
   
-  newWindow(title, file, true);
+  // newWindow(title, file, true);
 });
 
