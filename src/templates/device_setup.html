@@ -13,44 +13,66 @@
         </h3>
         <div class="dropdown-divider"></div>
         <form>
-            <div class="row mt-3">
-                <div class="col-4">
-                   <h5>Device Mode</h5> 
+            
+            <div class="row mt-3 ml-2">
+                <div class="col-4 mt-1">
+                   <p class="text-muted">Device Mode</p> 
                 </div>
                 <div class="col-4"></div>
                 <div class="col-4">
-                    <select class="form-control" id="mode">
-                        <option class="form-control">Rover</option>
-                        <option class="form-control">Base</option>
+                    <select name="mode" id="mode" class="form-control">
+                        <option>Rover</option>
+                        <option>Base</option>
                     </select>
                 </div>
             </div>
 
+            <div class="dropdown-divider"></div>
+
             <div class="row mt-2 ml-1">
                 <p><strong>Static Base</strong></p>
-                <div class="row mt-3">
-                    <div class="col-4">
-                       <h5>Latitude</h5> 
+                <div class="col-12">
+                    <div class="row">
+                        <div class="col-4 mt-1">
+                           <p class="text-muted">Latitude</p> 
+                        </div>
+                        <div class="col-2"></div>
+                        <div class="col-6">
+                            <input type="text" id="latitude" placeholder="Latitude" class="form-control">
+                        </div>Latitude
                     </div>
-                    <div class="col-4"></div>
-                    <div class="col-4">
-                        <select class="form-control" id="mode">
-                            <option class="form-control">Rover</option>
-                            <option class="form-control">Base</option>
-                        </select>
+                    <div class="row">
+                        <div class="col-4 mt-1">
+                           <p class="text-muted">Longitude</p> 
+                        </div>
+                        <div class="col-2"></div>
+                        <div class="col-6">
+                            <input type="text" id="longitude" placeholder="Longitude" class="form-control">
+                        </div>
                     </div>
                 </div>
-                <div class="row mt-3">
-                    <div class="col-4">
-                       <h5>Device Mode</h5> 
-                    </div>
-                    <div class="col-4"></div>
-                    <div class="col-4">
-                        <select class="form-control" id="mode">
-                            <option class="form-control">Rover</option>
-                            <option class="form-control">Base</option>
-                        </select>
-                    </div>
+            </div>
+
+            <div class="dropdown-divider"></div>
+
+            <div class="row mt-2 ml-1">
+                <div class="col-5 mt-1">
+                    <p class="text-muted">Enter manual command</p> 
+                </div>
+                <div class="col-10">
+                    <input type="text" id="command" placeholder="Manual Command" class="form-control">
+                </div>
+                <div class="col-2">
+                    <button class="btn btn-outline-secondary">Send</button>
+                </div>              
+            </div>
+
+            <div class="dropdown-divider"></div>
+
+            <div class="row">
+                <div class="col-5"></div>
+                <div class="col-5">
+                    <button class="btn btn-secondary">Apply All</button>
                 </div>
             </div>
 
