@@ -20,7 +20,7 @@ const createWindow = () => {
   });
 
   // mainWindow.menuBarVisible = false;
-  mainWindow.loadFile(path.join(__dirname, 'templates/index.html'));
+  mainWindow.loadFile(path.join(__dirname, 'templates/map_tracker.html'));
 
 };
 
@@ -38,7 +38,7 @@ app.on('activate', () => {
   }
 });
 
-function newWindow(title, file) {
+function newWindow(title, file, resizable) {
   childWindow = new BrowserWindow({
     webPreferences: {
       nodeIntegration: true
@@ -47,8 +47,9 @@ function newWindow(title, file) {
     width: 600,
     height: 500,
     parent: mainWindow,
-    resizable: false
+    resizable: resizable
   });
+  childWindow.maximize();
   childWindow.loadFile(path.join(__dirname, `templates/${file}`));
 }
 
@@ -58,5 +59,13 @@ ipcMain.on('device:setup',(event) => {
   title = 'Device Setup';
   
   newWindow(title, file);
+});
+
+
+ipcMain.on('open:map',(event) => {
+  file = 'map_tracker.html';
+  title = 'Map Tracker';
+  
+  newWindow(title, file, true);
 });
 
