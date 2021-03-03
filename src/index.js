@@ -22,11 +22,6 @@ const createWindow = () => {
   // mainWindow.menuBarVisible = false;
   mainWindow.loadFile(path.join(__dirname, 'templates/index.html'));
 
-  // menu
-  const mainMenu = Menu.buildFromTemplate(menuTemplate);
-  Menu.setApplicationMenu(mainMenu);
-
-
 };
 
 app.on('ready', createWindow);
@@ -43,40 +38,25 @@ app.on('activate', () => {
   }
 });
 
-function createNewWindow(title, file) {
+function newWindow(title, file) {
   childWindow = new BrowserWindow({
     webPreferences: {
       nodeIntegration: true
     },
     title: title,
-    width: 400,
-    height: 200,
+    width: 600,
+    height: 500,
     parent: mainWindow,
     resizable: false
   });
   childWindow.loadFile(path.join(__dirname, `templates/${file}`));
 }
 
-ipcMain.on('open:device',(event) => {
-  let file;
-  let title;
-  if (request === 'open:device') {
-    file = 'index.html';
-    title= 'Device Name';
-  }
-  createNewWindow(title, file);
+
+ipcMain.on('device:setup',(event) => {
+  file = 'device_setup.html';
+  title = 'Device Setup';
+  
+  newWindow(title, file);
 });
 
-// code for navbar
-const menuTemplate = [
-  {
-    label: 'RTK',
-    submenu: [
-      { label: 'Task 1'
-      },
-      {
-        label: 'Task 2'
-      }
-    ]
-  }
-];
