@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, Menu } = require('electron');
 const { request } = require('http');
 const path = require('path');
 
@@ -18,8 +18,10 @@ const createWindow = () => {
     height: 600,
     resizable: false
   });
+
   // mainWindow.menuBarVisible = false;
   mainWindow.loadFile(path.join(__dirname, 'templates/index.html'));
+
 };
 
 app.on('ready', createWindow);
@@ -50,9 +52,11 @@ function newWindow(title, file) {
   childWindow.loadFile(path.join(__dirname, `templates/${file}`));
 }
 
+
 ipcMain.on('device:setup',(event) => {
   file = 'device_setup.html';
   title = 'Device Setup';
   
   newWindow(title, file);
 });
+
