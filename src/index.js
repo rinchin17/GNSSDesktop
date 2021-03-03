@@ -19,7 +19,7 @@ const createWindow = () => {
     resizable: false
   });
 
-  // mainWindow.menuBarVisible = false;
+  mainWindow.menuBarVisible = false;
   mainWindow.loadFile(path.join(__dirname, 'templates/index.html'));
 
 };
@@ -38,18 +38,20 @@ app.on('activate', () => {
   }
 });
 
-function newWindow(title, file, resizable) {
+function newWindow(title, file, width, height, resizable) {
   childWindow = new BrowserWindow({
     webPreferences: {
       nodeIntegration: true
     },
     title: title,
-    width: 600,
-    height: 500,
+    width: width,
+    height: height,
     parent: mainWindow,
-    resizable: resizable
+    modal: true,
+    resizable: resizable,
+    skipTaskbar: true
   });
-  childWindow.maximize();
+  childWindow.menuBarVisible = false;
   childWindow.loadFile(path.join(__dirname, `templates/${file}`));
 }
 
@@ -57,25 +59,36 @@ function newWindow(title, file, resizable) {
 ipcMain.on('device:setup',(event) => {
   file = 'device_setup.html';
   title = 'Device Setup';
-  
-  newWindow(title, file);
+
+  newWindow(title, file, 600, 500, false);
+});
+
+ipcMain.on('open:download',(event) => {
+  file = 'data_download.html';
+  title = 'Download';
+
+  newWindow(title, file, 400, 480, false);
+});
+
+ipcMain.on('open:settings',(event) => {
+  file = 'settings.html';
+  title = 'Settings';
+
+  newWindow(title, file, 600, 350, false);
 });
 
 
-ipcMain.on('open:map',(event) => {
-  file = 'map_tracker.html';
-  title = 'Map Tracker';
-
+ipcMain.on('open:map',(event) => {  
   childWindow = new BrowserWindow({
     webPreferences: {
       nodeIntegration: true
     },
-    title: title,
+    title: 'Map Tracker',
+    width: 600,
+    height:500,
     parent: mainWindow
   });
   childWindow.maximize();
-  childWindow.loadFile(path.join(__dirname, `templates/${file}`));
-  
-  // newWindow(title, file, true);
+  childWindow.menuBarVisible = false;
+  childWindow.loadFile(path.join(__dirname, `templates/map_tracker.html`));
 });
-
