@@ -42,55 +42,61 @@
 					<div class="col-8">
 						<div class="row">
 							<div class="col-6">
+								<small id="dateHelpBlock" class="form-text text-muted">Date</small>
 								<div class="input-group mb-2">
 									<div class="input-group-prepend">
 									  <div class="input-group-text"><span class="fa fa-calendar"></span></div>
 									</div>
-									<input type="text" class="form-control" id="date" placeholder="Date" disabled>
+									<input type="text" class="form-control" id="date" placeholder="Date" aria-describedby="dateHelpBlock" disabled>
 								  </div>
 							</div>
 							<div class="col-6">
+								<small id="timeHelpBlock" class="form-text text-muted">Time</small>
 								<div class="input-group mb-2">
 									<div class="input-group-prepend">
 									  <div class="input-group-text"><span class="fa fa-clock-o"></span></div>
 									</div>
-									<input type="text" class="form-control" id="time" placeholder="Time" disabled>
+									<input type="text" class="form-control" id="time" placeholder="Time" aria-describedby="timeHelpBlock" disabled>
 								  </div>
 							</div>
 						</div>
 						<div class="row mt-2">
 							<div class="col-6">
+								<small id="latitudeHelpBlock" class="form-text text-muted">Latitude</small>
 								<div class="input-group mb-2">
 									<div class="input-group-prepend">
 									  <div class="input-group-text"><span class="fa fa-arrow-up"></span></div>
 									</div>
-									<input type="text" class="form-control" id="latitude" placeholder="Latitude" disabled>
+									<input type="text" class="form-control" id="latitude" placeholder="Latitude" aria-describedby="latitudeHelpBlock" disabled>
 								  </div>
 							</div>
 							<div class="col-6">
+								<small id="longitudeHelpBlock" class="form-text text-muted">Longitude</small>
 								<div class="input-group mb-2">
 									<div class="input-group-prepend">
 									  <div class="input-group-text"><span class="fa fa-arrow-right"></span></div>
 									</div>
-									<input type="text" class="form-control" id="longitude" placeholder="Longitude" disabled>
+									<input type="text" class="form-control" id="longitude" placeholder="Longitude" aria-describedby="longitudeHelpBlock" disabled>
 								  </div>
 							</div>
 						</div>
 						<div class="row mt-2">
 							<div class="col-6">
+								<small id="hdopHelpBlock" class="form-text text-muted">HDOP</small>
 								<div class="input-group mb-2">
 									<div class="input-group-prepend">
 									  <div class="input-group-text"><small>*</small></div>
 									</div>
-									<input type="text" class="form-control" id="hdop" placeholder="HDOP" disabled>
+									<input type="text" class="form-control" id="hdop" placeholder="HDOP" aria-describedby="hdopHelpBlock" disabled>
 								  </div>
 							</div>
 							<div class="col-6">
+								<small id="speedHelpBlock" class="form-text text-muted">Speed</small>
 								<div class="input-group mb-2">
 									<div class="input-group-prepend">
 									  <div class="input-group-text"><span class="fa fa-spinner"></span></div>
 									</div>
-									<input type="text" class="form-control" id="speed" placeholder="Speed" disabled>
+									<input type="text" class="form-control" id="speed" placeholder="Speed" aria-describedby="speedHelpBlock" disabled>
 								  </div>
 							</div>
 						</div>
@@ -113,27 +119,30 @@
 
 				<div class="row mt-2">
 					<div class="col-4">
+						<small id="rtkStatusHelpBlock" class="form-text text-muted">RTK Status</small>
 						<div class="input-group mb-2">
 							<div class="input-group-prepend">
 							  <div class="input-group-text">@</div>
 							</div>
-							<input type="text" class="form-control" id="rtkStatus" placeholder="RTK Status" disabled>
+							<input type="text" class="form-control" id="rtkStatus" placeholder="RTK Status" aria-describedby="rtkStatusHelpBlock" disabled>
 						  </div>
 					</div>
 					<div class="col-4">
+						<small id="rtkAgeHelpBlock" class="form-text text-muted">RTK Age</small>
 						<div class="input-group mb-2">
 							<div class="input-group-prepend">
 							  <div class="input-group-text">#</div>
 							</div>
-							<input type="text" class="form-control" id="rtkAge" placeholder="RTK Age" disabled>
+							<input type="text" class="form-control" id="rtkAge" placeholder="RTK Age" aria-describedby="rtkAgeHelpBlock" disabled>
 						  </div>
 					</div>
 					<div class="col-4">
+						<small id="rtkRatioHelpBlock" class="form-text text-muted">RTK Ratio</small>
 						<div class="input-group mb-2">
 							<div class="input-group-prepend">
 							  <div class="input-group-text">:</div>
 							</div>
-							<input type="text" class="form-control" id="rtkRatio" placeholder="RTK Ratio" disabled>
+							<input type="text" class="form-control" id="rtkRatio" placeholder="RTK Ratio" aria-describedby="rtkRatioHelpBlock" disabled>
 						  </div>
 					</div>
 				</div>

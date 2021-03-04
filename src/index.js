@@ -127,11 +127,11 @@ function readTextFile(input, parse) {
 // ipcMain
 
 ipcMain.on('device:setup',(event) => {
-  // file = 'device_setup.html';
-  // title = 'Device Setup';
+  file = 'device_setup.html';
+  title = 'Device Setup';
 
-  // newWindow(title, file, 600, 500, false);
-  openFile();
+  newWindow(title, file, 600, 500, false);
+  //openFile();
 });
 
 ipcMain.on('open:download',(event) => {
