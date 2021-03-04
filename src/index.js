@@ -103,4 +103,3 @@ ipcMain.on('open:map',(event) => {
   childWindow.menuBarVisible = false;
   childWindow.loadFile(path.join(__dirname, `templates/map_tracker.html`));
 });
-
