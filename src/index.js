@@ -1,6 +1,10 @@
-const { app, BrowserWindow, ipcMain, Menu } = require('electron');
+const { app, BrowserWindow, ipcMain, Menu, dialog } = require('electron');
 const { request } = require('http');
 const path = require('path');
+// for loading  File System
+const fs = require('fs'); 
+// for reading NMEA file
+var nmeaGps = fs.createReadStream('output.nmea'); 
 
 if (require('electron-squirrel-startup')) {
   app.quit();
@@ -55,12 +59,77 @@ function newWindow(title, file, width, height, resizable) {
   childWindow.loadFile(path.join(__dirname, `templates/${file}`));
 }
 
+// for selecting a file to read
+function openFile(){
+  dialog.showOpenDialog(mainWindow, {
+      properties: ['openFile'],
+      filters: [{name:'output', extensions: ['nmea','png','gif']}]
+  }).then(result => {
+      const file = result.filePaths[0];
+      const fileContent = fs.readFileSync(file).toString();
+      // console.log(fileContent);
+      mainWindow.webContents.send('read:file', fileContent);
+  }).catch(err => {
+      console.log(err)
+  });
+}
+
+
+// NMEA parsing section
+
+readTextFile(nmeaGps, parse);
+
+if(!String.prototype.startsWith){
+    String.prototype.startsWith = function (str) {
+        return !this.indexOf(str);
+    }
+}
+
+function parse (sentence) {
+   
+    // console.log(status + " " + lat + "" + latDirection + " " + lng + "" + lngDirection);
+    // console.log("http://www.google.com/maps/place/" + lat + ",-" + lng + "/@" + lat + ",-" + lng + ",17z");
+    // console.log(nmea_data.longitude);
+    
+    mainWindow.webContents.on('did-finish-load', function () {
+        mainWindow.webContents.send('parse:nmea', sentence);
+        // console.log(sentence);
+    });
+    
+}
+
+function readTextFile(input, parse) {
+    var remaining = '';
+
+    input.on('data', function(data) {
+        remaining += data;
+        var index = remaining.indexOf('\n');
+        while (index > -1) {
+            var line = remaining.substring(0, index);
+            remaining = remaining.substring(index + 1);
+            if(line.startsWith("$GPRMC")) {
+                parse(line);
+            }
+            index = remaining.indexOf('\n');
+        }
+    });
+
+    input.on('end', function() {
+        if (remaining.length > 0 && remaining.startsWith("$GPRMC")) {
+            parse(remaining);
+        }
+    });
+}
+
+
+// ipcMain
 
 ipcMain.on('device:setup',(event) => {
-  file = 'device_setup.html';
-  title = 'Device Setup';
+  // file = 'device_setup.html';
+  // title = 'Device Setup';
 
-  newWindow(title, file, 600, 500, false);
+  // newWindow(title, file, 600, 500, false);
+  openFile();
 });
 
 ipcMain.on('open:download',(event) => {

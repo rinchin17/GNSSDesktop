@@ -143,7 +143,7 @@
 					<div class="col">
 						<h5>Live Data Feed</h5>
 						<div class="list-group" style="height: 200px; overflow: scroll;">
-							<li class="text-muted">$ some data</li>
+							<li id="test" class="text-muted">$ some data</li>
 							<li class="text-muted">$ some data</li>
 							<li class="text-muted">$ some data</li>
 							<li class="text-muted">$ some data</li>
@@ -182,6 +182,38 @@
 		//Device setup
 		document.querySelector('#setup').addEventListener('click', (event) => {
 			ipcRenderer.send('device:setup');
+		});
+
+		// receiving nmea file
+		ipcRenderer.on('read:file', (event, fileContent) => {
+			document.querySelector('#test').innerHTML = `${fileContent}`;
+		});
+
+		// receiving parsed nmea file
+		ipcRenderer.on('parse:nmea', (event, sentence) => {
+
+			var nmea = sentence.split(",");
+			var time = nmea[1].substring(0,2) + ":" + nmea[1].substring(2,4) + ":" + nmea[1].substring(4,6);
+			var date = nmea[9].substring(0,2) + "/" + nmea[9].substring(2,4) + "/" + nmea[9].substring(4,6);
+			var speed = nmea[7] + " knots";
+		    var status = (nmea[2] == "A" ? "Ok!" : "Warning");
+
+		    var latDeg = parseInt(nmea[3].substring(0, 2));
+		    var latMin = nmea[3].substring(2);
+		    var lat = latDeg + (latMin/60);
+		    var latDirection = nmea[4];
+
+		    var lngDeg = parseInt(nmea[5].substring(0, 3));
+		    var lngMin = nmea[5].substring(3);
+		    var lng = lngDeg + (lngMin/60);
+		    var lngDirection = nmea[6];
+
+		    document.querySelector('#latitude').value = lat;
+			document.querySelector('#longitude').value = lng;
+			document.querySelector('#hdop').value = lngDirection;
+			document.querySelector('#speed').value = speed;
+			document.querySelector('#time').value = time;
+			document.querySelector('#date').value = date;
 		});
 
 	</script>
