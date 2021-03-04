@@ -2,13 +2,6 @@ const { app, BrowserWindow, ipcMain, Menu } = require('electron');
 const { request } = require('http');
 const path = require('path');
 
-var geolocation = require('geolocation');
- 
-geolocation.getCurrentPosition(function (err, position) {
-  if (err) throw err
-  console.log(position);
-});
-
 if (require('electron-squirrel-startup')) {
   app.quit();
 }
@@ -24,7 +17,7 @@ const createWindow = () => {
     width: 800,
     height: 600,
     resizable: false,
-    frame: false,
+    //frame: false,
     movable: true,
     transparent: true
   });
@@ -58,8 +51,7 @@ function newWindow(title, file, width, height, resizable) {
     height: height,
     parent: mainWindow,
     modal: true,
-    resizable: resizable,
-    skipTaskbar: true
+    resizable: resizable
   });
   childWindow.menuBarVisible = false;
   childWindow.loadFile(path.join(__dirname, `templates/${file}`));
@@ -94,12 +86,12 @@ ipcMain.on('open:map',(event) => {
       nodeIntegration: true
     },
     title: 'Map Tracker',
-    width: 600,
-    height:500,
+    width: 800,
+    height:580,
     parent: mainWindow,
     modal: true
   });
-  childWindow.maximize();
+  //childWindow.maximize();
   childWindow.menuBarVisible = false;
   childWindow.loadFile(path.join(__dirname, `templates/map_tracker.html`));
 });
