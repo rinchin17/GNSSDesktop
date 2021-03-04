@@ -2,6 +2,13 @@ const { app, BrowserWindow, ipcMain, Menu } = require('electron');
 const { request } = require('http');
 const path = require('path');
 
+var geolocation = require('geolocation');
+ 
+geolocation.getCurrentPosition(function (err, position) {
+  if (err) throw err
+  console.log(position);
+});
+
 if (require('electron-squirrel-startup')) {
   app.quit();
 }
@@ -16,7 +23,10 @@ const createWindow = () => {
     title: 'RTK GNSS VIEWER',
     width: 800,
     height: 600,
-    resizable: false
+    resizable: false,
+    frame: false,
+    movable: true,
+    transparent: true
   });
 
   mainWindow.menuBarVisible = false;
@@ -86,7 +96,8 @@ ipcMain.on('open:map',(event) => {
     title: 'Map Tracker',
     width: 600,
     height:500,
-    parent: mainWindow
+    parent: mainWindow,
+    modal: true
   });
   childWindow.maximize();
   childWindow.menuBarVisible = false;
