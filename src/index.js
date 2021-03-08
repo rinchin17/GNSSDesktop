@@ -170,7 +170,7 @@ ipcMain.on('make:command', (event, command) => {
   console.log(command);
 
   axios
-  .post('http://127.0.0.1:3000/command', {
+  .post('http://192.168.0.167:3000/command', {
     command: command
   })
   .then(res => console.log(res))
