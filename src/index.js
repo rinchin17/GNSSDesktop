@@ -1,4 +1,5 @@
 const { app, BrowserWindow, ipcMain, Menu, dialog } = require('electron');
+const axios = require('axios')
 const { request } = require('http');
 const path = require('path');
 // for loading  File System
@@ -163,4 +164,17 @@ ipcMain.on('open:map',(event) => {
   //childWindow.maximize();
   childWindow.menuBarVisible = false;
   childWindow.loadFile(path.join(__dirname, `templates/map_tracker.html`));
+});
+
+ipcMain.on('make:command', (event, command) => {
+  console.log(command);
+
+  axios
+  .post('http://127.0.0.1:3000/command', {
+    command: command
+  })
+  .then(res => console.log(res))
+  .catch(error => {
+    console.error(error)
+  })
 });
