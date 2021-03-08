@@ -18,7 +18,7 @@ const createWindow = () => {
   mainWindow = new BrowserWindow({
     webPreferences: { nodeIntegration: true},
     title: 'RTK GNSS VIEWER',
-    width: 800,
+    width: 850,
     height: 600,
     resizable: false,
     //frame: false,
@@ -131,7 +131,9 @@ ipcMain.on('device:setup',(event) => {
   title = 'Device Setup';
 
   newWindow(title, file, 600, 500, false);
+
   // openFile();
+
 });
 
 ipcMain.on('open:download',(event) => {
@@ -164,3 +166,12 @@ ipcMain.on('open:map',(event) => {
   childWindow.menuBarVisible = false;
   childWindow.loadFile(path.join(__dirname, `templates/map_tracker.html`));
 });
+
+
+// mainWindow.webContents.on('did-finish-load', function () {
+//   mainWindow.webContents.on('new-window', function(e, url) {
+//     e.preventDefault();
+//     require('electron').shell.openExternal(url);
+//   });    
+// });
+
