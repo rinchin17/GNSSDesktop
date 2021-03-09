@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, Menu, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, Menu, dialog, Notification } = require('electron');
 const axios = require('axios')
 const { request } = require('http');
 const path = require('path');
@@ -6,6 +6,39 @@ const path = require('path');
 const fs = require('fs'); 
 // for reading NMEA file
 var nmeaGps = fs.createReadStream('output.nmea'); 
+
+function showNotification (title, body) {
+  const notification = {
+    title: title,
+    body: body
+  }
+  new Notification(notification).show()
+}
+
+//uart
+const SerialPort = require('serialport');
+const Readline = require('@serialport/parser-readline');
+
+function loadUart() {
+  try {
+    const port = new SerialPort('/dev/ttyUSB0', { baudRate: 9600 });
+    const parser = port.pipe(new Readline({ delimiter: '\n' }));
+    port.on("open", () => {
+      console.log('serial port open');
+    });
+    
+    parser.on('data', data => {
+      showNotification('got word from arduino', data);
+      console.log('got word from arduino: ', data);
+    });
+  } catch(e) {
+    showNotification('Error!!! ', 'cannot open port');
+  }
+}
+
+
+
+//uart
 
 if (require('electron-squirrel-startup')) {
   app.quit();
@@ -29,7 +62,6 @@ const createWindow = () => {
 
   mainWindow.menuBarVisible = false;
   mainWindow.loadFile(path.join(__dirname, 'templates/index.html'));
-
 };
 
 app.on('ready', createWindow);
@@ -96,6 +128,7 @@ function parse (sentence) {
     
     mainWindow.webContents.on('did-finish-load', function () {
         mainWindow.webContents.send('parse:nmea', sentence);
+        loadUart();
         // console.log(sentence);
     });
     
@@ -132,6 +165,7 @@ ipcMain.on('device:setup',(event) => {
   title = 'Device Setup';
 
   newWindow(title, file, 600, 500, false);
+  loadUart();
   //openFile();
 });
 
@@ -167,14 +201,27 @@ ipcMain.on('open:map',(event) => {
 });
 
 ipcMain.on('make:command', (event, command) => {
-  console.log(command);
+    //send command over UART
+    var command = command;
+    // Read the port data
 
-  axios
-  .post('http://192.168.0.167:3000/command', {
-    command: command
-  })
-  .then(res => console.log(res))
-  .catch(error => {
-    console.error(error)
-  })
+  
+    port.write(command, (err) => {
+      if (err) {
+        showNotification('Error on write ', 'cannot open port');
+        //return console.log('Error on write: ', err.message);
+      }
+    });
+  
+  // send command over wifi api
+  // axios
+  // .post('http://192.168.0.167:3000/command', {
+  //   command: command
+  // })
+  // .then(res => console.log(res))
+  // .catch(error => {
+  //   console.error(error)
+  // })
+
+
 });
