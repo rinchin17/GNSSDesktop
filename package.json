@@ -48,7 +48,8 @@
     "axios": "^0.21.1",
     "electron-squirrel-startup": "^1.0.0",
     "geolocation": "^0.2.0",
-    "http": "^0.0.1-security"
+    "http": "^0.0.1-security",
+    "serialport": "^9.0.7"
   },
   "devDependencies": {
     "@electron-forge/cli": "^6.0.0-beta.54",
