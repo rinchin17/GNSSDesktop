@@ -2,9 +2,7 @@ const { app, BrowserWindow, ipcMain, Menu, dialog, Notification } = require('ele
 const axios = require('axios')
 const { request } = require('http');
 const path = require('path');
-// for loading  File System
 const fs = require('fs'); 
-// for reading NMEA file
 var nmeaGps = fs.createReadStream('output.nmea'); 
 
 function showNotification (title, body) {
@@ -19,24 +17,39 @@ function showNotification (title, body) {
 const SerialPort = require('serialport');
 const Readline = require('@serialport/parser-readline');
 
-function loadUart() {
-  try {
-    const port = new SerialPort('/dev/ttyUSB0', { baudRate: 9600 });
-    const parser = port.pipe(new Readline({ delimiter: '\n' }));
+let port;
+
+ipcMain.on('load:device', (event)=>{
+  let available_ports = [];
+  SerialPort.list().then(ports => {
+    ports.forEach(function(port) {
+      if(port.pnpId) {
+        available_ports.push(port.path); 
+      }
+    });
+    console.log(available_ports);
+    mainWindow.webContents.send('load:device', available_ports);
+  });
+});
+
+
+
+function loadUart(comp) {
+    port = "";
+    port = new SerialPort(comp, { baudRate: 9600 });
+    
     port.on("open", () => {
-      console.log('serial port open');
+      showNotification('Port opened', 'blablabla');
+      //console.log('serial port open');
     });
     
+    const parser = port.pipe(new Readline({ delimiter: '\n' }));
+
     parser.on('data', data => {
       showNotification('got word from arduino', data);
-      console.log('got word from arduino: ', data);
+      //console.log('got word from arduino: ', data);
     });
-  } catch(e) {
-    showNotification('Error!!! ', 'cannot open port');
-  }
 }
-
-
 
 //uart
 
@@ -50,7 +63,10 @@ let childWindow;
 
 const createWindow = () => {
   mainWindow = new BrowserWindow({
-    webPreferences: { nodeIntegration: true},
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false
+    },
     title: 'RTK GNSS VIEWER',
     width: 800,
     height: 600,
@@ -59,9 +75,8 @@ const createWindow = () => {
     movable: true,
     transparent: true
   });
-
   mainWindow.menuBarVisible = false;
-  mainWindow.loadFile(path.join(__dirname, 'templates/index.html'));
+  mainWindow.loadFile(path.join(__dirname, 'templates/index.html')); 
 };
 
 app.on('ready', createWindow);
@@ -81,7 +96,8 @@ app.on('activate', () => {
 function newWindow(title, file, width, height, resizable) {
   childWindow = new BrowserWindow({
     webPreferences: {
-      nodeIntegration: true
+      nodeIntegration: true,
+      contextIsolation: false
     },
     title: title,
     width: width,
@@ -127,9 +143,7 @@ function parse (sentence) {
     // console.log(nmea_data.longitude);
     
     mainWindow.webContents.on('did-finish-load', function () {
-        mainWindow.webContents.send('parse:nmea', sentence);
-        loadUart();
-        // console.log(sentence);
+      mainWindow.webContents.send('parse:nmea', sentence);
     });
     
 }
@@ -158,14 +172,12 @@ function readTextFile(input, parse) {
 }
 
 
-// ipcMain
-
 ipcMain.on('device:setup',(event) => {
   file = 'device_setup.html';
   title = 'Device Setup';
 
   newWindow(title, file, 600, 500, false);
-  loadUart();
+  //loadUart();
   //openFile();
 });
 
@@ -187,7 +199,8 @@ ipcMain.on('open:settings',(event) => {
 ipcMain.on('open:map',(event) => {  
   childWindow = new BrowserWindow({
     webPreferences: {
-      nodeIntegration: true
+      nodeIntegration: true,
+      contextIsolation: false
     },
     title: 'Map Tracker',
     width: 800,
@@ -207,6 +220,9 @@ ipcMain.on('make:command', (event, command) => {
 
   
     port.write(command, (err) => {
+      if(!err) {
+        console.log('opened')
+      }
       if (err) {
         showNotification('Error on write ', 'cannot open port');
         //return console.log('Error on write: ', err.message);
@@ -222,6 +238,12 @@ ipcMain.on('make:command', (event, command) => {
   // .catch(error => {
   //   console.error(error)
   // })
+});
 
-
+ipcMain.on('connect', (event, comp) => {
+  if(!comp) {
+    return false;
+  } else {
+    loadUart(comp);
+  }
 });
