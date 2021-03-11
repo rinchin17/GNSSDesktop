@@ -63,7 +63,7 @@
                     <input type="text" id="command" placeholder="Manual Command" class="form-control">
                 </div>
                 <div class="col-2">
-                    <button class="btn btn-outline-secondary">Send</button>
+                    <button class="btn btn-outline-secondary" id="btnCommand" role="button" type="button">Send</button>
                 </div>              
             </div>
 
@@ -78,4 +78,15 @@
 
         </form>
     </div>
+
+    <script>
+        const electron = require('electron')
+        const { ipcRenderer } = electron;
+
+        document.querySelector('#btnCommand').addEventListener('click', (event) => {
+            var command = document.querySelector('#command').value;
+            console.log(command);
+            ipcRenderer.send('make:command', command);
+        });
+    </script>
 </body>

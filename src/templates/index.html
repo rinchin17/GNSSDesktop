@@ -153,8 +153,9 @@
 					<div class="col">
 						<h5>Live Data Feed</h5>
 
-						<div class="list-group" style="height: 200px; overflow-y: scroll;">
-							<li id="test "class="text-muted">$ some data</li>
+
+						<div class="list-group" style="height: 110px; overflow-y: scroll;">
+							<li class="text-muted">$ some data</li>
 							<li class="text-muted">$ some data</li>
 							<li class="text-muted">$ some data</li>
 							<li class="text-muted">$ some data</li>
@@ -224,8 +225,14 @@
 			document.querySelector('#speed').value = speed;
 			document.querySelector('#time').value = time;
 			document.querySelector('#date').value = date;
-			document.querySelector('#test').innerHTML = sentence;
+			// document.querySelector('#test').innerHTML = sentence;
 		});
+
+		ipcRenderer.on('test:dummy', (event, dummy) => {
+			// document.querySelector('#hdop').value = sentence;
+			console.log(dummy);
+		});
+
 
 	</script>
 

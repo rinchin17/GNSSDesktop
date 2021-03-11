@@ -1,10 +1,14 @@
 const { app, BrowserWindow, ipcMain, Menu, dialog } = require('electron');
+const axios = require('axios')
 const { request } = require('http');
 const path = require('path');
 // for loading  File System
 const fs = require('fs'); 
 // for reading NMEA file
 var nmeaGps = fs.createReadStream('output.nmea'); 
+
+
+var dummy = ["abc","def"];
 
 if (require('electron-squirrel-startup')) {
   app.quit();
@@ -16,7 +20,9 @@ let childWindow;
 
 const createWindow = () => {
   mainWindow = new BrowserWindow({
-    webPreferences: { nodeIntegration: true},
+    webPreferences: { nodeIntegration: true,
+      contextIsolation: false
+    },
     title: 'RTK GNSS VIEWER',
     width: 850,
     height: 600,
@@ -95,6 +101,7 @@ function parse (sentence) {
     
     mainWindow.webContents.on('did-finish-load', function () {
         mainWindow.webContents.send('parse:nmea', sentence);
+        mainWindow.webContents.send('test:dummy', dummy);
         // console.log(sentence);
     });
     
@@ -168,10 +175,25 @@ ipcMain.on('open:map',(event) => {
 });
 
 
+
 // mainWindow.webContents.on('did-finish-load', function () {
 //   mainWindow.webContents.on('new-window', function(e, url) {
 //     e.preventDefault();
 //     require('electron').shell.openExternal(url);
 //   });    
 // });
+
+
+ipcMain.on('make:command', (event, command) => {
+  console.log(command);
+
+  axios
+  .post('http://192.168.0.167:3000/command', {
+    command: command
+  })
+  .then(res => console.log(res))
+  .catch(error => {
+    console.error(error)
+  })
+});
 
