@@ -49,6 +49,7 @@
     "electron-squirrel-startup": "^1.0.0",
     "geolocation": "^0.2.0",
     "http": "^0.0.1-security",
+    "node-wifi": "^2.0.14",
     "serialport": "^9.0.7"
   },
   "devDependencies": {

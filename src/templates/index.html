@@ -10,7 +10,7 @@
 <body>
     <div class="container-fluid">
         <div class="row">       
-            <div class="col-3 bg-light" id="left">	
+            <div class="col-3 bg-light">	
                 <div class="list-group">
 					<button id="device" class="list-group-item btn btn-outline-dark mt-5"><span class="fa fa-desktop"></span> Device</button>
                     <button id="download" class="list-group-item btn btn-outline-dark mt-2"><span class="fa fa-download"></span> Download</button>
@@ -22,18 +22,52 @@
 			<div class="col-8 mt-3 pt-2">
 
 				<form class="row">
-					<div class="col-3 form-group">
-						<select id="port" class="form-control">
-							<option>COM 1</option>
-							<option>COM 2</option>
-							<option>COM 3</option>
+					<div class="col-4 form-group">
+						<select id="serial_port" class="form-control">
+							
 						</select>
 					</div>
-					<div class="col-4 form-group">
-						<button class="btn btn-outline-secondary">Connect <span class="fa fa-plug"></span></button>
+
+					<div class="col-6 form-group">
+						<button id="connect_serial" class="btn btn-outline-secondary">Connect via Serial <span class="fa fa-plug"></span></button>
 					</div>
 
-					<div class="col-4 ml-3 form-group">
+					<div class="col-4 form-group">
+						<select id="wifi" class="form-control">
+							
+						</select>
+					</div>
+
+					<div class="col-4 form-group">
+						<input type="password" id="password" placeholder="Enter wifi password"></input>
+					</div>
+
+					<div class="col-sm-5 form-group">
+						<button id="connect_wifi" class="btn btn-outline-secondary">Connect via WiFi <span class="fa fa-plug"></span></button>
+					</div>
+
+					
+					
+					<div class="col-4">
+						<small id="dateHelpBlock" class="form-text text-muted">Select Baud Rate</small>
+						<select id="baudRate" class="form-control">
+							<option>300</option>
+							<option>600</option>
+							<option>1200</option>
+							<option>2400</option>
+							<option>4800</option>
+							<option>9600</option>
+							<option>14400</option>
+							<option>19200</option>
+							<option>28800</option>
+							<option>31250</option>
+							<option>38400</option>
+							<option>57600</option>
+							<option>115200</option>
+						</select>
+					</div>
+
+					<div class="col-4 form-group">
 						<button id="setup" class="btn btn-secondary"><span class="fa fa-cog"></span> Device Setup</button>
 					</div>
 				</form>
@@ -155,18 +189,8 @@
 
 
 						<div class="list-group" style="height: 110px; overflow-y: scroll;">
-							<li class="text-muted">$ some data</li>
-							<li class="text-muted">$ some data</li>
-							<li class="text-muted">$ some data</li>
-							<li class="text-muted">$ some data</li>
-							<li class="text-muted">$ some data</li>
-							<li class="text-muted">$ some data</li>
-							<li class="text-muted">$ some data</li>
-							<li class="text-muted">$ some data</li>
-							<li class="text-muted">$ some data</li>
-							<li class="text-muted">$ some data</li>
-							<li class="text-muted">$ some data</li>
-							<li class="text-muted">$ some data</li>
+							<li class="text-muted" id="an"></li>
+							
 						</div>
 					</div>
 				</div>
@@ -176,6 +200,20 @@
 
 	<script>
 		const { ipcRenderer } = require('electron');
+
+		window.onload = (event) => {
+        	ipcRenderer.send('load:device');
+			ipcRenderer.send('load:wifi');
+      	};
+		
+		document.getElementById("connect_wifi").onclick = function() { 
+			document.getElementById("serial_port").style.display = "none"; 
+        } 
+
+		document.querySelector('#connect_wifi').addEventListener('click', (event) => {
+			document.getElementById("serial_port").style.display = "none";
+			document.getElementById("serial_port").style.visibility = "hidden";
+		});
 
 		//Menu selectors
 		document.querySelector('#device').addEventListener('click', (event) => {
@@ -225,14 +263,62 @@
 			document.querySelector('#speed').value = speed;
 			document.querySelector('#time').value = time;
 			document.querySelector('#date').value = date;
-			// document.querySelector('#test').innerHTML = sentence;
+			document.querySelector('#an').innerHTML = sentence;
+		});
+		
+		// sending selected port and baudRate
+		document.querySelector('#connect_serial').addEventListener('click', (event) => {
+			var p = document.querySelector('#serial_port').value;
+			var baudRate = document.querySelector('#baudRate').value;
+			var serial_details = [];
+
+			serial_details.push(p);
+			serial_details.push(baudRate);
+
+			if (!p)
+				return false;
+			ipcRenderer.send('connect_serial', (event, serial_details));
+			
+			// removing the last selected serial port and baudRate
+			serial_details.pop();
+			serial_details.pop();
 		});
 
-		ipcRenderer.on('test:dummy', (event, dummy) => {
-			// document.querySelector('#hdop').value = sentence;
-			console.log(dummy);
+		// sending selected wifi
+		document.querySelector('#connect_wifi').addEventListener('click', (event) => {
+			var wifi = document.querySelector('#wifi').value;
+			var password = document.querySelector('#password').value;
+			var wifi_details = [];
+
+			wifi_details.push(wifi);
+			wifi_details.push(password);
+			if (!wifi_details)
+				return false;
+			ipcRenderer.send('connect_wifi', (event, wifi_details));
 		});
 
+		ipcRenderer.on('load:device', (event, ports) => {
+			let port_menu = document.querySelector('#serial_port');
+			port_menu.innerHTML = "";
+			for (var i=0;i<ports.length;i++) {
+				const op = document.createElement('option');
+				op.innerHTML = ports[i];
+				op.value = ports[i];
+				port_menu.appendChild(op);	
+			}
+		});
+
+		ipcRenderer.on('load:wifi', (event, wifi) => {
+			console.log("hmtl wifi:"+wifi);
+			let wifi_menu = document.querySelector('#wifi');
+			wifi_menu.innerHTML = "";
+			for (var i=0;i<wifi.length;i++) {
+				const op = document.createElement('option');
+				op.innerHTML = wifi[i];
+				op.value = wifi[i];
+				wifi_menu.appendChild(op);	
+			}
+		});
 
 	</script>
 

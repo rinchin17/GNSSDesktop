@@ -2,10 +2,114 @@ const { app, BrowserWindow, ipcMain, Menu, dialog, Notification } = require('ele
 const axios = require('axios')
 const { request } = require('http');
 const path = require('path');
-// for loading  File System
 const fs = require('fs'); 
-// for reading NMEA file
 var nmeaGps = fs.createReadStream('output.nmea'); 
+// wifi
+var wifi = require('node-wifi');
+
+
+
+ipcMain.on('load:wifi', (event)=>{  
+
+  wifi.init({
+    iface: null // network interface, choose a random wifi interface if set to null
+  });
+  
+  // Scan networks
+  wifi.scan((error, networks) => {
+    if (error) {
+      console.log(error);
+    } 
+    else {
+      available_wifi = [];
+      for(var i = 0; i<networks.length;i++){
+        available_wifi.push(networks[i].ssid);
+      }
+      // console.log("index.js wifi: "+available_wifi);
+      mainWindow.webContents.send('load:wifi',available_wifi);
+      
+      /*
+          networks = [
+              {
+                ssid: '...',
+                bssid: '...',
+                mac: '...', // equals to bssid (for retrocompatibility)
+                channel: <number>,
+                frequency: <number>, // in MHz
+                signal_level: <number>, // in dB
+                quality: <number>, // same as signal level but in %
+                security: 'WPA WPA2' // format depending on locale for open networks in Windows
+                security_flags: '...' // encryption protocols (format currently depending of the OS)
+                mode: '...' // network mode like Infra (format currently depending of the OS)
+              },
+              ...
+          ];
+          */
+    }
+  });
+  
+
+
+  
+  // Disconnect from a network
+  // not available on all os for now
+  // wifi.disconnect(error => {
+  //   if (error) {
+  //     console.log(error);
+  //   } else {
+  //     console.log('Disconnected');
+  //   }
+  // });
+  
+  // Delete a saved network
+  // not available on all os for now
+  // wifi.deleteConnection({ ssid: 'ssid' }, error => {
+  //   if (error) {
+  //     console.log(error);
+  //   } else {
+  //     console.log('Deleted');
+  //   }
+  // });
+  
+  // List the current wifi connections
+  // wifi.getCurrentConnections((error, currentConnections) => {
+  //   if (error) {
+  //     console.log(error);
+  //   } else {
+  //     console.log(currentConnections);
+  //     /*
+  //     // you may have several connections
+  //     [
+  //         {
+  //             iface: '...', // network interface used for the connection, not available on macOS
+  //             ssid: '...',
+  //             bssid: '...',
+  //             mac: '...', // equals to bssid (for retrocompatibility)
+  //             channel: <number>,
+  //             frequency: <number>, // in MHz
+  //             signal_level: <number>, // in dB
+  //             quality: <number>, // same as signal level but in %
+  //             security: '...' //
+  //             security_flags: '...' // encryption protocols (format currently depending of the OS)
+  //             mode: '...' // network mode like Infra (format currently depending of the OS)
+  //         }
+  //     ]
+  //     */
+  //   }
+  // });
+  
+  // All functions also return promise if there is no callback given
+  wifi
+    .scan()
+    .then(networks => {
+      // networks
+    })
+    .catch(error => {
+      console.log("Oops! "+error);
+    });
+
+});
+
 
 
 function showNotification (title, body) {
@@ -20,28 +124,52 @@ function showNotification (title, body) {
 const SerialPort = require('serialport');
 const Readline = require('@serialport/parser-readline');
 
-function loadUart() {
-  try {
-    const port = new SerialPort('/dev/ttyUSB0', { baudRate: 9600 });
-    const parser = port.pipe(new Readline({ delimiter: '\n' }));
-    port.on("open", () => {
-      console.log('serial port open');
+let port;
+
+ipcMain.on('load:device', (event)=>{
+  let available_ports = [];
+  SerialPort.list().then(ports => {
+    ports.forEach(function(port) {
+      if(port.pnpId) {
+        available_ports.push(port.path); 
+      }
     });
-    
-    parser.on('data', data => {
-      showNotification('got word from arduino', data);
-      console.log('got word from arduino: ', data);
-    });
-  } catch(e) {
-    showNotification('Error!!! ', 'cannot open port');
-  }
+    // console.log(available_ports);
+    mainWindow.webContents.send('load:device', available_ports);
+  });
+});
+
+// connecting to network via WiFi
+function connectWifi(net_ssid, password) {
+  wifi.connect({ ssid: net_ssid, password: password }, error => {
+    if (error) {
+      console.log("Could not connect to "+net_ssid+" "+error);
+      showNotification("Could not connect to "+net_ssid,error);
+    }
+    else{
+      console.log('Connected to: ' + net_ssid);
+      showNotification('Connected to: ', net_ssid);
+    }
+  });
 }
 
+// opening the UART channel
+function loadUart(comp, baudRate) {
+    port = "";
+    port = new SerialPort(comp, parseInt(baudRate));
+    
+    port.on("open", () => {
+      showNotification('Port opened with Baud Rate = '+baudRate,);
+    });
+    
+    const parser = port.pipe(new Readline({ delimiter: '\n' }));
 
+    parser.on('data', data => {
+      showNotification('got word from arduino', data);
+    });
+}
 
 //uart
-
-
 if (require('electron-squirrel-startup')) {
   app.quit();
 }
@@ -52,7 +180,8 @@ let childWindow;
 
 const createWindow = () => {
   mainWindow = new BrowserWindow({
-    webPreferences: { nodeIntegration: true,
+    webPreferences: {
+      nodeIntegration: true,
       contextIsolation: false
     },
     title: 'RTK GNSS VIEWER',
@@ -63,9 +192,8 @@ const createWindow = () => {
     movable: true,
     transparent: true
   });
-
   mainWindow.menuBarVisible = false;
-  mainWindow.loadFile(path.join(__dirname, 'templates/index.html'));
+  mainWindow.loadFile(path.join(__dirname, 'templates/index.html')); 
 };
 
 app.on('ready', createWindow);
@@ -85,7 +213,8 @@ app.on('activate', () => {
 function newWindow(title, file, width, height, resizable) {
   childWindow = new BrowserWindow({
     webPreferences: {
-      nodeIntegration: true
+      nodeIntegration: true,
+      contextIsolation: false
     },
     title: title,
     width: width,
@@ -131,9 +260,7 @@ function parse (sentence) {
     // console.log(nmea_data.longitude);
     
     mainWindow.webContents.on('did-finish-load', function () {
-        mainWindow.webContents.send('parse:nmea', sentence);
-        loadUart();
-        // console.log(sentence);
+      mainWindow.webContents.send('parse:nmea', sentence);
     });
     
 }
@@ -162,15 +289,11 @@ function readTextFile(input, parse) {
 }
 
 
-// ipcMain
-
 ipcMain.on('device:setup',(event) => {
   file = 'device_setup.html';
   title = 'Device Setup';
 
   newWindow(title, file, 600, 500, false);
-  loadUart();
-  //openFile();
 });
 
 ipcMain.on('open:download',(event) => {
@@ -191,7 +314,8 @@ ipcMain.on('open:settings',(event) => {
 ipcMain.on('open:map',(event) => {  
   childWindow = new BrowserWindow({
     webPreferences: {
-      nodeIntegration: true
+      nodeIntegration: true,
+      contextIsolation: false
     },
     title: 'Map Tracker',
     width: 800,
@@ -206,14 +330,6 @@ ipcMain.on('open:map',(event) => {
 
 
 
-// mainWindow.webContents.on('did-finish-load', function () {
-//   mainWindow.webContents.on('new-window', function(e, url) {
-//     e.preventDefault();
-//     require('electron').shell.openExternal(url);
-//   });    
-// });
-
-
 ipcMain.on('make:command', (event, command) => {
     //send command over UART
     var command = command;
@@ -221,6 +337,9 @@ ipcMain.on('make:command', (event, command) => {
 
   
     port.write(command, (err) => {
+      if(!err) {
+        console.log('opened')
+      }
       if (err) {
         showNotification('Error on write ', 'cannot open port');
         //return console.log('Error on write: ', err.message);
@@ -236,6 +355,26 @@ ipcMain.on('make:command', (event, command) => {
   // .catch(error => {
   //   console.error(error)
   // })
+});
 
+// opening serial port with baudRate
+ipcMain.on('connect_serial', (event, serial_details) => {
+  comp = serial_details[0];
+  baudRate = serial_details[1];
+  if(!serial_details) {
+    return false;
+  } else {
+    loadUart(comp, baudRate);    
+  }
+});
 
+// connecting wifi
+ipcMain.on('connect_wifi', (event, wifi_details) => {
+  var ssid = wifi_details[0];
+  var password = wifi_details[1];
+  if(!wifi_details) {
+    return false;
+  } else {
+    connectWifi(ssid,password);
+  }
 });
