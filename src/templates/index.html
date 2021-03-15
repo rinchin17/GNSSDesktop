@@ -16,61 +16,60 @@
                     <button id="download" class="list-group-item btn btn-outline-dark mt-2"><span class="fa fa-download"></span> Download</button>
                     <button id="map" class="list-group-item btn btn-outline-dark mt-2"><span class="fa fa-map-marker"></span> Map Tracker</button>
                     <button id="settings" class="list-group-item btn btn-outline-dark mt-2"><span class="fa fa-cogs"></span> Settings</button>
+					<button id="setup" class="list-group-item btn btn-outline-dark mt-2"><span class="fa fa-cog"></span> Device Setup</button>
                 </div>
             </div>
 
 			<div class="col-8 mt-3 pt-2">
 
-				<form class="row">
-					<div class="col-4 form-group">
-						<select id="serial_port" class="form-control">
-							
+				<div class="row" id="div_comm_type">
+					<div class="col-4">
+						Connection Type
+					</div>
+					<div class="col-6">
+						<select id="comm_type" class="form-control" onchange="connChange()">
+							<option value="0"> --- None --- </option>
+							<option value="1">WiFi</option>
+							<option value="2">Serial Port</option>
 						</select>
 					</div>
+				</div>
 
-					<div class="col-6 form-group">
-						<button id="connect_serial" class="btn btn-outline-secondary">Connect via Serial <span class="fa fa-plug"></span></button>
-					</div>
+				<div class="row pt-1" id="Connect">
 
-					<div class="col-4 form-group">
+				</div>
+
+				<!-- <div class="row pt-1" id="div_comm_wifi">
+					<div class="col-4">
 						<select id="wifi" class="form-control">
 							
 						</select>
 					</div>
-
-					<div class="col-4 form-group">
-						<input type="password" id="password" placeholder="Enter wifi password"></input>
-					</div>
-
-					<div class="col-sm-5 form-group">
-						<button id="connect_wifi" class="btn btn-outline-secondary">Connect via WiFi <span class="fa fa-plug"></span></button>
-					</div>
-
-					
-					
 					<div class="col-4">
-						<small id="dateHelpBlock" class="form-text text-muted">Select Baud Rate</small>
-						<select id="baudRate" class="form-control">
-							<option>300</option>
-							<option>600</option>
-							<option>1200</option>
-							<option>2400</option>
-							<option>4800</option>
-							<option>9600</option>
-							<option>14400</option>
-							<option>19200</option>
-							<option>28800</option>
-							<option>31250</option>
-							<option>38400</option>
-							<option>57600</option>
-							<option>115200</option>
+						<input id="password" type="password" class="form-control" placeholder="Password">
+					</div>
+					<div class="col-4">
+						<button type="button" id="connect_wifi" class="btn btn-outline-secondary">Connect <i class="fa fa-plug"></i></button>
+					</div>
+				</div>
+
+				<div class="row mt-1" id="div_comm_serial">
+					<div class="col-4">
+						<select id="serial_port" class="form-control">
+							
 						</select>
 					</div>
-
-					<div class="col-4 form-group">
-						<button id="setup" class="btn btn-secondary"><span class="fa fa-cog"></span> Device Setup</button>
+					<div class="col-4">
+						<select id="baudRate" class="form-control">
+							<option>9600</option>
+							<option>115200</option>	
+						</select>
 					</div>
-				</form>
+					<div class="col-4">
+						<button type="button" id="connect_serial" class="btn btn-outline-secondary">Connect <i class="fa fa-plug"></i></button>
+					</div>
+				</div> -->
+
 				<div class="dropdown-divider mt-1 mb-1"></div>
 				<div class="row">
 					<div class="col-8">
@@ -201,20 +200,6 @@
 	<script>
 		const { ipcRenderer } = require('electron');
 
-		window.onload = (event) => {
-        	ipcRenderer.send('load:device');
-			ipcRenderer.send('load:wifi');
-      	};
-		
-		document.getElementById("connect_wifi").onclick = function() { 
-			document.getElementById("serial_port").style.display = "none"; 
-        } 
-
-		document.querySelector('#connect_wifi').addEventListener('click', (event) => {
-			document.getElementById("serial_port").style.display = "none";
-			document.getElementById("serial_port").style.visibility = "hidden";
-		});
-
 		//Menu selectors
 		document.querySelector('#device').addEventListener('click', (event) => {
 			ipcRenderer.send('open:device');
@@ -267,7 +252,7 @@
 		});
 		
 		// sending selected port and baudRate
-		document.querySelector('#connect_serial').addEventListener('click', (event) => {
+		function connectSerial() {
 			var p = document.querySelector('#serial_port').value;
 			var baudRate = document.querySelector('#baudRate').value;
 			var serial_details = [];
@@ -282,12 +267,13 @@
 			// removing the last selected serial port and baudRate
 			serial_details.pop();
 			serial_details.pop();
-		});
+		}
 
 		// sending selected wifi
-		document.querySelector('#connect_wifi').addEventListener('click', (event) => {
+		function connectWifi() {
 			var wifi = document.querySelector('#wifi').value;
 			var password = document.querySelector('#password').value;
+			console.log(wifi + " " + password);
 			var wifi_details = [];
 
 			wifi_details.push(wifi);
@@ -295,7 +281,7 @@
 			if (!wifi_details)
 				return false;
 			ipcRenderer.send('connect_wifi', (event, wifi_details));
-		});
+		}
 
 		ipcRenderer.on('load:device', (event, ports) => {
 			let port_menu = document.querySelector('#serial_port');
@@ -319,6 +305,41 @@
 				wifi_menu.appendChild(op);	
 			}
 		});
+
+		var wifi = '<div class="col-4">'+
+						'<select id="wifi" class="form-control">' +
+							
+						'</select>'+
+					'</div>'+
+					'<div class="col-4">'+
+						'<input id="password" type="password" class="form-control" placeholder="Password">'+
+					'</div>'+
+					'<div class="col-4">'+
+						'<button type="button" onclick="connectWifi()" class="btn btn-outline-secondary">Connect <i class="fa fa-plug"></i></button>'+
+					'</div>';
+
+		var serial = '<div class="col-4"><select id="serial_port" class="form-control"></select></div>' +
+					'<div class="col-4"><select id="baudRate" class="form-control">'+
+						'<option>9600</option><option>115200</option></select>'+
+					'</div>'+
+					'<div class="col-4"><button type="button" id="connect_serial" onclick="connectSerial()" class="btn btn-outline-secondary">Connect <i class="fa fa-plug"></i></button></div>';
+
+		function connChange() {
+			var conType = document.getElementById('comm_type').value;
+			
+			
+			console.log(conType);
+			if (conType == 0) {
+				document.getElementById('Connect').innerHTML = "";
+			}
+			else if(conType == 1) {
+				document.getElementById('Connect').innerHTML = wifi;
+				ipcRenderer.send('load:wifi');
+			} else {
+				document.getElementById('Connect').innerHTML = serial;
+				ipcRenderer.send('load:device');
+			}
+		}
 
 	</script>
 

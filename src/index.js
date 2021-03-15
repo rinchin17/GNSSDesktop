@@ -130,8 +130,9 @@ ipcMain.on('load:device', (event)=>{
   let available_ports = [];
   SerialPort.list().then(ports => {
     ports.forEach(function(port) {
-      if(port.pnpId) {
-        available_ports.push(port.path); 
+      if(port.pnpId & port.serialNumber) {
+        available_ports.push(port.path);
+        console.log(port); 
       }
     });
     // console.log(available_ports);
@@ -185,8 +186,8 @@ const createWindow = () => {
       contextIsolation: false
     },
     title: 'RTK GNSS VIEWER',
-    width: 850,
-    height: 600,
+    width: 900,
+    height: 700,
     resizable: false,
     //frame: false,
     movable: true,
