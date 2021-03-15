@@ -4,16 +4,20 @@ const { request } = require('http');
 const path = require('path');
 const fs = require('fs'); 
 var nmeaGps = fs.createReadStream('output.nmea'); 
+var md5 = require('md5');
 // wifi
 var wifi = require('node-wifi');
 
 
 
 ipcMain.on('load:wifi', (event)=>{  
-
+  
+  var testhash = "Hey, my name is Rinchin.";
+  console.log("JS Hash: "+md5(testhash));
   wifi.init({
     iface: null // network interface, choose a random wifi interface if set to null
   });
+  // b6b4281981bb1b5615bb17f7e4314f19
   
   // Scan networks
   wifi.scan((error, networks) => {
@@ -25,7 +29,6 @@ ipcMain.on('load:wifi', (event)=>{
       for(var i = 0; i<networks.length;i++){
         available_wifi.push(networks[i].ssid);
       }
-      // console.log("index.js wifi: "+available_wifi);
       mainWindow.webContents.send('load:wifi',available_wifi);
       
       /*
@@ -47,19 +50,7 @@ ipcMain.on('load:wifi', (event)=>{
           */
     }
   });
-  
 
-
-  
-  // Disconnect from a network
-  // not available on all os for now
-  // wifi.disconnect(error => {
-  //   if (error) {
-  //     console.log(error);
-  //   } else {
-  //     console.log('Disconnected');
-  //   }
-  // });
   
   // Delete a saved network
   // not available on all os for now
@@ -130,7 +121,7 @@ ipcMain.on('load:device', (event)=>{
   let available_ports = [];
   SerialPort.list().then(ports => {
     ports.forEach(function(port) {
-      if(port.pnpId) {
+      if(port.pnpId && port.serialNumber) {
         available_ports.push(port.path); 
       }
     });
@@ -151,6 +142,16 @@ function connectWifi(net_ssid, password) {
       showNotification('Connected to: ', net_ssid);
     }
   });
+
+  // disconnect from WiFi
+  // wifi.disconnect(error => {
+  //   if (error) {
+  //     console.log(error);
+  //   } else {
+  //     console.log('Disconnected');
+  //     showNotification('Disconnected','');
+  //   }
+  // });
 }
 
 // opening the UART channel

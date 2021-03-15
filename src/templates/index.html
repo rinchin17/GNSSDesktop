@@ -29,7 +29,7 @@
 					</div>
 
 					<div class="col-6 form-group">
-						<button id="connect_serial" class="btn btn-outline-secondary">Connect via Serial <span class="fa fa-plug"></span></button>
+						<button type="button" id="connect_serial" class="btn btn-outline-secondary">Connect via Serial <span class="fa fa-plug"></span></button>
 					</div>
 
 					<div class="col-4 form-group">
@@ -43,7 +43,7 @@
 					</div>
 
 					<div class="col-sm-5 form-group">
-						<button id="connect_wifi" class="btn btn-outline-secondary">Connect via WiFi <span class="fa fa-plug"></span></button>
+						<button type="button" id="connect_wifi" class="btn btn-outline-secondary">Connect via WiFi <span class="fa fa-plug"></span></button>
 					</div>
 
 					
@@ -66,6 +66,7 @@
 							<option>115200</option>
 						</select>
 					</div>
+					
 
 					<div class="col-4 form-group">
 						<button id="setup" class="btn btn-secondary"><span class="fa fa-cog"></span> Device Setup</button>
@@ -206,13 +207,20 @@
 			ipcRenderer.send('load:wifi');
       	};
 		
-		document.getElementById("connect_wifi").onclick = function() { 
-			document.getElementById("serial_port").style.display = "none"; 
-        } 
 
 		document.querySelector('#connect_wifi').addEventListener('click', (event) => {
 			document.getElementById("serial_port").style.display = "none";
 			document.getElementById("serial_port").style.visibility = "hidden";
+			document.getElementById("connect_serial").style.visibility = "hidden";
+		});
+
+		
+		document.querySelector('#connect_serial').addEventListener('click', (event) => {
+			document.getElementById("wifi").style.display = "none";
+			document.getElementById("wifi").style.visibility = "hidden";
+			document.getElementById("connect_wifi").style.visibility = "hidden";
+			document.getElementById("password").style.visibility = "hidden";
+			document.getElementById("baudRate").style.visibility = "hidden";
 		});
 
 		//Menu selectors
@@ -233,11 +241,6 @@
 		document.querySelector('#setup').addEventListener('click', (event) => {
 			ipcRenderer.send('device:setup');
 		});
-
-		// receiving nmea file
-		// ipcRenderer.on('read:file', (event, fileContent) => {
-		// 	document.querySelector('#test').innerHTML = `${fileContent}`;
-		// });
 
 		// receiving and parsing nmea file
 		ipcRenderer.on('parse:nmea', (event, sentence) => {
@@ -295,6 +298,8 @@
 			if (!wifi_details)
 				return false;
 			ipcRenderer.send('connect_wifi', (event, wifi_details));
+			wifi_details.pop();
+			wifi_details.pop();
 		});
 
 		ipcRenderer.on('load:device', (event, ports) => {
