@@ -10,7 +10,7 @@
 <body>
     <div class="container-fluid">
         <div class="row">       
-            <div class="col-3 bg-light">	
+            <div class="col-3 bg-light" style="height: 100vh;">	
                 <div class="list-group">
 					<button id="device" class="list-group-item btn btn-outline-dark mt-5"><span class="fa fa-desktop"></span> Device</button>
                     <button id="download" class="list-group-item btn btn-outline-dark mt-2"><span class="fa fa-download"></span> Download</button>
@@ -20,13 +20,13 @@
                 </div>
             </div>
 
-			<div class="col-8 mt-3 pt-2">
+			<div class="col-9 mt-3 pt-2">
 
 				<div class="row" id="div_comm_type">
 					<div class="col-4">
 						Connection Type
 					</div>
-					<div class="col-6">
+					<div class="col-4">
 						<select id="comm_type" class="form-control" onchange="connChange()">
 							<option value="0"> --- None --- </option>
 							<option value="1">WiFi</option>
@@ -38,37 +38,6 @@
 				<div class="row pt-1" id="Connect">
 
 				</div>
-
-				<!-- <div class="row pt-1" id="div_comm_wifi">
-					<div class="col-4">
-						<select id="wifi" class="form-control">
-							
-						</select>
-					</div>
-					<div class="col-4">
-						<input id="password" type="password" class="form-control" placeholder="Password">
-					</div>
-					<div class="col-4">
-						<button type="button" id="connect_wifi" class="btn btn-outline-secondary">Connect <i class="fa fa-plug"></i></button>
-					</div>
-				</div>
-
-				<div class="row mt-1" id="div_comm_serial">
-					<div class="col-4">
-						<select id="serial_port" class="form-control">
-							
-						</select>
-					</div>
-					<div class="col-4">
-						<select id="baudRate" class="form-control">
-							<option>9600</option>
-							<option>115200</option>	
-						</select>
-					</div>
-					<div class="col-4">
-						<button type="button" id="connect_serial" class="btn btn-outline-secondary">Connect <i class="fa fa-plug"></i></button>
-					</div>
-				</div> -->
 
 				<div class="dropdown-divider mt-1 mb-1"></div>
 				<div class="row">
@@ -187,9 +156,9 @@
 						<h5>Live Data Feed</h5>
 
 
-						<div class="list-group" style="height: 110px; overflow-y: scroll;">
+						<div class="list-group" style="height: 210px; overflow-y: scroll;">
 							<li class="text-muted" id="an"></li>
-							
+					
 						</div>
 					</div>
 				</div>
@@ -323,8 +292,7 @@
 
 		function connChange() {
 			var conType = document.getElementById('comm_type').value;
-			
-			
+						
 			console.log(conType);
 			if (conType == 0) {
 				document.getElementById('Connect').innerHTML = "";
