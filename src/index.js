@@ -1,6 +1,6 @@
 const { app, BrowserWindow, ipcMain, Menu, dialog, Notification } = require('electron');
 const axios = require('axios')
-const { request } = require('http');
+const { request, http } = require('http');
 const path = require('path');
 const fs = require('fs'); 
 var nmeaGps = fs.createReadStream('output.nmea'); 
@@ -8,7 +8,7 @@ var md5 = require('md5');
 // wifi
 var wifi = require('node-wifi');
 
-
+var connType = 0;
 
 ipcMain.on('load:wifi', (event)=>{  
   wifi.init({
@@ -77,10 +77,12 @@ function connectWifi(net_ssid, password) {
     if (error) {
       console.log("Could not connect to "+net_ssid+" "+error);
       showNotification("Could not connect to "+net_ssid,error);
+      connType = 1;
     }
     else{
       console.log('Connected to: ' + net_ssid);
       showNotification('Connected to: ', net_ssid);
+      connType = 1;
     }
   });
 
@@ -101,6 +103,7 @@ function loadUart(comp, baudRate) {
     port = new SerialPort(comp, parseInt(baudRate));
     
     port.on("open", () => {
+      connType = 2;
       showNotification('Port opened with Baud Rate = '+baudRate);
       console.log('Port opened with Baud Rate = '+baudRate)
     });
@@ -269,20 +272,29 @@ ipcMain.on('open:map',(event) => {
 
 
 ipcMain.on('make:command', (event, command) => {
-    //send command over UART
     var command = command;
-    // Read the port data
 
-  
-    port.write(command, (err) => {
-      if(!err) {
-        console.log('opened')
-      }
-      if (err) {
-        showNotification('Error on write ', 'cannot open port');
-        //return console.log('Error on write: ', err.message);
-      }
-    });
+    //send command over UART
+    if(connType == 2) {
+      port.write(command, (err) => {
+        if(!err) {
+          console.log('opened')
+        }
+        if (err) {
+          showNotification('Error on write ', 'cannot open port');
+          //return console.log('Error on write: ', err.message);
+        }
+      });
+    }
+
+    if(connType == 1) {
+      http.request(`192.168.0.196/command/${command}`, res => {
+        console.log(`statusCode: ${res.statusCode}`)
+        res.on('data', d => {
+          process.stdout.write(d)
+        });
+      })    
+    }
 });
 
 // opening serial port with baudRate
