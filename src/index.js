@@ -13,7 +13,7 @@ var wifi = require('node-wifi');
 ipcMain.on('load:wifi', (event)=>{  
   
   var testhash = "Hey, my name is Rinchin.";
-  // console.log("JS Hash: "+md5(testhash));
+  console.log("JS Hash: "+md5(testhash));
   wifi.init({
     iface: null // network interface, choose a random wifi interface if set to null
   });
@@ -254,12 +254,7 @@ if(!String.prototype.startsWith){
     }
 }
 
-function parse (sentence) {
-   
-    // console.log(status + " " + lat + "" + latDirection + " " + lng + "" + lngDirection);
-    // console.log("http://www.google.com/maps/place/" + lat + ",-" + lng + "/@" + lat + ",-" + lng + ",17z");
-    // console.log(nmea_data.longitude);
-    
+function parse (sentence) {    
     mainWindow.webContents.on('did-finish-load', function () {
       mainWindow.webContents.send('parse:nmea', sentence);
     });
@@ -335,15 +330,12 @@ ipcMain.on('make:command', (event, command) => {
     //send command over UART
     var command = command;
     // Read the port data
-
-  
     port.write(command, (err) => {
       if(!err) {
         console.log('opened')
       }
       if (err) {
         showNotification('Error on write ', 'cannot open port');
-        //return console.log('Error on write: ', err.message);
       }
     });
   
