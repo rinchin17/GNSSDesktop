@@ -13,11 +13,11 @@ var wifi = require('node-wifi');
 ipcMain.on('load:wifi', (event)=>{  
   
   var testhash = "Hey, my name is Rinchin.";
-  console.log("JS Hash: "+md5(testhash));
+  // console.log("JS Hash: "+md5(testhash));
   wifi.init({
     iface: null // network interface, choose a random wifi interface if set to null
   });
-  // b6b4281981bb1b5615bb17f7e4314f19
+  
   
   // Scan networks
   wifi.scan((error, networks) => {
@@ -121,11 +121,11 @@ ipcMain.on('load:device', (event)=>{
   let available_ports = [];
   SerialPort.list().then(ports => {
     ports.forEach(function(port) {
-      if(port.pnpId && port.serialNumber) {
+      if(port.pnpId) {
         available_ports.push(port.path); 
       }
     });
-    // console.log(available_ports);
+    console.log(available_ports);
     mainWindow.webContents.send('load:device', available_ports);
   });
 });
@@ -186,8 +186,8 @@ const createWindow = () => {
       contextIsolation: false
     },
     title: 'RTK GNSS VIEWER',
-    width: 850,
-    height: 600,
+    width: 900,
+    height: 700,
     resizable: false,
     //frame: false,
     movable: true,
