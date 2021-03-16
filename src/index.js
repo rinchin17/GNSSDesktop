@@ -11,9 +11,6 @@ var wifi = require('node-wifi');
 
 
 ipcMain.on('load:wifi', (event)=>{  
-  
-  var testhash = "Hey, my name is Rinchin.";
-  console.log("JS Hash: "+md5(testhash));
   wifi.init({
     iface: null // network interface, choose a random wifi interface if set to null
   });
@@ -30,65 +27,8 @@ ipcMain.on('load:wifi', (event)=>{
         available_wifi.push(networks[i].ssid);
       }
       mainWindow.webContents.send('load:wifi',available_wifi);
-      
-      /*
-          networks = [
-              {
-                ssid: '...',
-                bssid: '...',
-                mac: '...', // equals to bssid (for retrocompatibility)
-                channel: <number>,
-                frequency: <number>, // in MHz
-                signal_level: <number>, // in dB
-                quality: <number>, // same as signal level but in %
-                security: 'WPA WPA2' // format depending on locale for open networks in Windows
-                security_flags: '...' // encryption protocols (format currently depending of the OS)
-                mode: '...' // network mode like Infra (format currently depending of the OS)
-              },
-              ...
-          ];
-          */
     }
   });
-
-  
-  // Delete a saved network
-  // not available on all os for now
-  // wifi.deleteConnection({ ssid: 'ssid' }, error => {
-  //   if (error) {
-  //     console.log(error);
-  //   } else {
-  //     console.log('Deleted');
-  //   }
-  // });
-  
-  // List the current wifi connections
-  // wifi.getCurrentConnections((error, currentConnections) => {
-  //   if (error) {
-  //     console.log(error);
-  //   } else {
-  //     console.log(currentConnections);
-  //     /*
-  //     // you may have several connections
-  //     [
-  //         {
-  //             iface: '...', // network interface used for the connection, not available on macOS
-  //             ssid: '...',
-  //             bssid: '...',
-  //             mac: '...', // equals to bssid (for retrocompatibility)
-  //             channel: <number>,
-  //             frequency: <number>, // in MHz
-  //             signal_level: <number>, // in dB
-  //             quality: <number>, // same as signal level but in %
-  //             security: '...' //
-  //             security_flags: '...' // encryption protocols (format currently depending of the OS)
-  //             mode: '...' // network mode like Infra (format currently depending of the OS)
-  //         }
-  //     ]
-  //     */
-  //   }
-  // });
-  
   // All functions also return promise if there is no callback given
   wifi
     .scan()
@@ -121,8 +61,9 @@ ipcMain.on('load:device', (event)=>{
   let available_ports = [];
   SerialPort.list().then(ports => {
     ports.forEach(function(port) {
-      if(port.pnpId) {
+      if(port.pnpId.substr(0,3) === 'USB') {
         available_ports.push(port.path); 
+        console.log(port.pnpId.substr(0,3));
       }
     });
     console.log(available_ports);
@@ -160,7 +101,8 @@ function loadUart(comp, baudRate) {
     port = new SerialPort(comp, parseInt(baudRate));
     
     port.on("open", () => {
-      showNotification('Port opened with Baud Rate = '+baudRate,);
+      showNotification('Port opened with Baud Rate = '+baudRate);
+      console.log('Port opened with Baud Rate = '+baudRate)
     });
     
     const parser = port.pipe(new Readline({ delimiter: '\n' }));
@@ -185,7 +127,7 @@ const createWindow = () => {
       nodeIntegration: true,
       contextIsolation: false
     },
-    title: 'RTK GNSS VIEWER',
+    title: 'EZRTK',
     width: 900,
     height: 700,
     resizable: false,
@@ -254,7 +196,7 @@ if(!String.prototype.startsWith){
     }
 }
 
-function parse (sentence) {    
+function parse (sentence) {
     mainWindow.webContents.on('did-finish-load', function () {
       mainWindow.webContents.send('parse:nmea', sentence);
     });
@@ -338,16 +280,6 @@ ipcMain.on('make:command', (event, command) => {
         showNotification('Error on write ', 'cannot open port');
       }
     });
-  
-  // send command over wifi api
-  // axios
-  // .post('http://192.168.0.167:3000/command', {
-  //   command: command
-  // })
-  // .then(res => console.log(res))
-  // .catch(error => {
-  //   console.error(error)
-  // })
 });
 
 // opening serial port with baudRate

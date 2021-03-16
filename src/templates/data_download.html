@@ -9,36 +9,35 @@
 	<div class="container text-center mt-3">
 		<h3>Data Download</h3>
 	</div>
-	<form>
-		<div class="container mt-3 mb-3" style="border:2px solid #ccc; width:300px; height: 250px; overflow-y: scroll;">
-			<input type="checkbox" /> 2021-02-03-0001.csv <br>
-			<input type="checkbox" /> 2021-02-03-0002.csv <br />
-			<input type="checkbox" /> 2021-02-03-0003.csv <br />
-			<input type="checkbox" /> 2021-02-03-0004.csv <br />
-			<input type="checkbox" /> 2021-02-03-0005.csv <br />
-			<input type="checkbox" /> 2021-02-03-0006.csv <br />
-			<input type="checkbox" /> 2021-02-03-0007.csv <br />
-			<input type="checkbox" /> 2021-02-03-0008.csv <br />
-			<input type="checkbox" /> 2021-02-03-0009.csv <br />
-			<input type="checkbox" /> 2021-02-03-0010.csv <br />
-		</div>
-	
-		<div class="container text-center">
-			<div id="load" class="spinner-border" role="status">
-				<span class="sr-only">Loading...</span>
-			</div><br>
-			<button type="submit" class="btn btn-outline-secondary mt-3">
-				<!-- <a href="http://192.168.0.167:3000/files" target="_blank" style="text-decoration: none; color: inherit;"> -->
-				<a href="http://192.168.43.144" target="_blank" style="text-decoration: none; color: inherit;">
-					Start Download
-				</a>
-			</button>
-			
-		</div>
-	</form>
-<!-- 	<script type="text/javascript">
-		document.querySelector('form').addEventListener('submit', (event) => {
+	<div id="file_list" class="container mt-3 mb-3" style="border:2px solid #ccc; ">
+		<div id="load" class="spinner-border" role="status">
+			<span class="sr-only">Loading...</span>
+		</div><br>
+	</div>
 
-		});
-	</script> -->
+	<script>
+		window.onload = function () {
+			fetch("http://192.168.0.196/files")
+				.then(function(response) {
+					return response.text().then(function(file) {
+						var files = file.split(" ");
+						var data='<div class="list-group">';
+						
+							
+                    		
+						for (var i = 0; i< files.length-1; i++) {
+							var x = files[i];
+							var y = x.replace("/", " ");
+							data = data + `<a download href="192.168.0.196/download${x}" class="list-group-item btn btn-light mt-1"> ${y} <span class="fa fa-download"></span></a>`;
+						}
+						data = data + '</div>';
+						document.querySelector('#file_list').innerHTML = data;
+					});
+				})
+				.catch(function (error) {
+					console.log("Error: " + error);
+				});
+		}
+	</script>
+
 </body>
