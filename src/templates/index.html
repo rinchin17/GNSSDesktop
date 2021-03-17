@@ -7,10 +7,10 @@
 	<link rel="stylesheet" href="./css/index.css">
 </head>
 
-<body>
-    <div class="container-fluid">
+<body style="background: transparent;">
+    <div class="container-fluid bg-light" style="border-radius: 5%;">
         <div class="row">       
-            <div class="col-3 bg-light" style="height: 100vh;">	
+            <div class="col-3" style="height: 100vh; background: #8DA1AF">	
                 <div class="list-group">
 					<button id="device" class="list-group-item btn btn-outline-dark mt-5"><span class="fa fa-desktop"></span> Device</button>
                     <button id="download" class="list-group-item btn btn-outline-dark mt-2"><span class="fa fa-download"></span> Download</button>
@@ -278,7 +278,7 @@
 						'</select>'+
 					'</div>'+
 					'<div class="col-4">'+
-						'<input id="password" type="password" class="form-control" placeholder="Password">'+
+						'<input id="password" type="password" value="bedrock@8540" class="form-control" placeholder="Password">'+
 					'</div>'+
 					'<div class="col-4">'+
 						'<button type="button" onclick="connectWifi()" class="btn btn-outline-secondary">Connect <i class="fa fa-plug"></i></button>'+
