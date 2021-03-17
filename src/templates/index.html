@@ -156,7 +156,7 @@
 						<h5>Live Data Feed</h5>
 
 
-						<div class="list-group" style="height: 210px; overflow-y: scroll;">
+						<div class="list-group" style="height: 180px; overflow-y: scroll;">
 							<li class="text-muted" id="an"></li>
 					
 						</div>
@@ -242,7 +242,7 @@
 
 			wifi_details.push(wifi);
 			wifi_details.push(password);
-			if (!wifi_details)
+			if (!wifi_details) 
 				return false;
 			ipcRenderer.send('connect_wifi', (event, wifi_details));
 

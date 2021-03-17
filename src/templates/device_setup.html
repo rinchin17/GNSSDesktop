@@ -85,8 +85,16 @@
 
         document.querySelector('#btnCommand').addEventListener('click', (event) => {
             var command = document.querySelector('#command').value;
-            console.log(command);
-            ipcRenderer.send('make:command', command);
+            fetch(`http://192.168.0.196/command/${command}`)
+				.then(function(response) {
+					response.text().then(function(res) {
+                        console.log(res);
+                    });
+				})
+				.catch(function (error) {
+					console.log("Error: " + error);
+				});
+            //ipcRenderer.send('make:command', command);
         });
     </script>
 </body>
