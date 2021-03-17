@@ -1,6 +1,6 @@
 const { app, BrowserWindow, ipcMain, Menu, dialog, Notification } = require('electron');
 const axios = require('axios')
-const { request, http } = require('http');
+const { request} = require('http');
 const path = require('path');
 const fs = require('fs'); 
 var nmeaGps = fs.createReadStream('output.nmea'); 
@@ -241,7 +241,7 @@ ipcMain.on('open:download',(event) => {
   file = 'data_download.html';
   title = 'Download';
 
-  newWindow(title, file, 400, 480, false);
+  newWindow(title, file, 600, 550, false);
 });
 
 ipcMain.on('open:settings',(event) => {
@@ -274,26 +274,19 @@ ipcMain.on('open:map',(event) => {
 ipcMain.on('make:command', (event, command) => {
     var command = command;
 
+    if (command.length <= 0) {
+      showNotification('Command Error!', "Empty string");
+      console.log('empty command');
+    }
+
+    command = command + md5(command);
     //send command over UART
     if(connType == 2) {
-      port.write(command, (err) => {
-        if(!err) {
-          console.log('opened')
-        }
-        if (err) {
-          showNotification('Error on write ', 'cannot open port');
-          //return console.log('Error on write: ', err.message);
-        }
-      });
+      sendOverUart(command);
     }
 
     if(connType == 1) {
-      http.request(`192.168.0.196/command/${command}`, res => {
-        console.log(`statusCode: ${res.statusCode}`)
-        res.on('data', d => {
-          process.stdout.write(d)
-        });
-      })    
+      sendOverWifi(command);
     }
 });
 
@@ -318,3 +311,75 @@ ipcMain.on('connect_wifi', (event, wifi_details) => {
     connectWifi(ssid,password);
   }
 });
+
+ipcMain.on('file:download', (event, uri) => {
+  console.log(uri);
+  var filename = "E:\\gnss_file_download";
+  downloadFile(uri, filename);
+});
+
+function sendOverWifi(command) {
+  axios.get(`http://192.168.0.196/command/${command}`)
+  .then(response => {
+    console.log(response.data);
+    showNotification('Response from EZRTK', response.data);
+  })
+  .catch(error => {
+    showNotification('Response from EZRTK', 'Some error occured!!!');
+    console.log(error);
+  });
+
+}
+
+function sendOverUart(command) {
+  port.write(command, (err) => {
+    if(!err) {
+      console.log('Command written : ', command);
+      showNotification('Command written : ', command);
+    }
+    if (err) {
+      showNotification('Error on write ', 'cannot open port');
+      console.log('Error on write: ', err.message);
+    }
+  });
+}
+
+function downloadFile(file_url, targetPath){
+  
+  // var file = fs.createWriteStream(app.getPath() + "externalFiles/file.txt");
+  // var request = http.get(file_url, function(response) {
+  //   response.pipe(file);
+  // });
+  // Save variable to know progress
+  var received_bytes = 0;
+  var total_bytes = 0;
+
+  var req = request({
+      method: 'GET',
+      uri: file_url
+  });
+
+  var out = fs.createWriteStream(targetPath);
+  req.pipe(out);
+
+  req.on('response', function ( data ) {
+      // Change the total bytes value to get progress later.
+      total_bytes = parseInt(data.headers['content-length' ]);
+  });
+
+  req.on('data', function(chunk) {
+      // Update the received bytes
+      received_bytes += chunk.length;
+
+      showProgress(received_bytes, total_bytes);
+  });
+
+  req.on('end', function() {
+      alert("File succesfully downloaded");
+  });
+}
+
+function showProgress(received,total){
+  var percentage = (received * 100) / total;
+  console.log(percentage + "% | " + received + " bytes out of " + total + " bytes.");
+}
