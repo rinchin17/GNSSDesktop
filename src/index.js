@@ -111,7 +111,8 @@ function loadUart(comp, baudRate) {
     const parser = port.pipe(new Readline({ delimiter: '\n' }));
 
     parser.on('data', data => {
-      showNotification('got word from arduino', data);
+      console.log('Response from ESP-32: '+data);
+      showNotification('Response from ESP-32: ', data);
     });
 }
 
@@ -316,21 +317,20 @@ ipcMain.on('connect_wifi', (event, wifi_details) => {
 function sendOverWifi(command) {
   axios.get(`http://192.168.0.196/command/${command}`)
   .then(response => {
-    console.log(response.data);
+    showNotification('Command sent Via Wi-Fi');
     showNotification('Response from EZRTK', response.data);
   })
   .catch(error => {
     showNotification('Response from EZRTK', 'Some error occured!!!');
     console.log(error);
   });
-
 }
 
 function sendOverUart(command) {
   port.write(command, (err) => {
     if(!err) {
-      console.log('Command written : ', command);
-      showNotification('Command written : ', command);
+      showNotification('Command sent Via UART : ', command);
+      console.log('Command sent Via UART: ', command);
     }
     if (err) {
       showNotification('Error on write ', 'cannot open port');
