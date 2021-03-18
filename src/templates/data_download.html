@@ -30,10 +30,8 @@
 						
 						for (var i = 0; i< files.length-1; i++) {
 							var x = files[i];
-							// download href="192.168.0.196/download${x}"
 							var y = x.replace("/", "");
-							//data = data + `<button type="button" class="list-group-item btn btn-light mt-1" onclick="download('${y}')"> ${y} <span class="fa fa-download"></span></button>`;
-							data = data + `<a download href="192.168.0.196/download/${y}" class="list-group-item btn btn-light mt-1"> ${y} <span class="fa fa-download"></span></a>`;
+							data = data + `<a download href="http://192.168.0.196/download/${y}" class="list-group-item btn btn-light mt-1"> ${y} <span class="fa fa-download"></span></a>`;
 						}
 						data = data + '</div>';
 						document.querySelector('#file_list').innerHTML = data;
@@ -42,12 +40,6 @@
 				.catch(function (error) {
 					console.log("Error: " + error);
 				});
-		}
-
-		function download(uri) {
-			console.log(uri)
-			const url = `192.168.0.196/download/${uri}`;
-			ipcRenderer.send('file:download', (event, url));
 		}
 	</script>
 

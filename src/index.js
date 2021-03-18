@@ -312,11 +312,6 @@ ipcMain.on('connect_wifi', (event, wifi_details) => {
   }
 });
 
-ipcMain.on('file:download', (event, uri) => {
-  console.log(uri);
-  var filename = "E:\\gnss_file_download";
-  downloadFile(uri, filename);
-});
 
 function sendOverWifi(command) {
   axios.get(`http://192.168.0.196/command/${command}`)
@@ -342,44 +337,4 @@ function sendOverUart(command) {
       console.log('Error on write: ', err.message);
     }
   });
-}
-
-function downloadFile(file_url, targetPath){
-  
-  // var file = fs.createWriteStream(app.getPath() + "externalFiles/file.txt");
-  // var request = http.get(file_url, function(response) {
-  //   response.pipe(file);
-  // });
-  // Save variable to know progress
-  var received_bytes = 0;
-  var total_bytes = 0;
-
-  var req = request({
-      method: 'GET',
-      uri: file_url
-  });
-
-  var out = fs.createWriteStream(targetPath);
-  req.pipe(out);
-
-  req.on('response', function ( data ) {
-      // Change the total bytes value to get progress later.
-      total_bytes = parseInt(data.headers['content-length' ]);
-  });
-
-  req.on('data', function(chunk) {
-      // Update the received bytes
-      received_bytes += chunk.length;
-
-      showProgress(received_bytes, total_bytes);
-  });
-
-  req.on('end', function() {
-      alert("File succesfully downloaded");
-  });
-}
-
-function showProgress(received,total){
-  var percentage = (received * 100) / total;
-  console.log(percentage + "% | " + received + " bytes out of " + total + " bytes.");
 }
