@@ -176,19 +176,18 @@ function newWindow(title, file, width, height, resizable) {
 
 // for selecting a file to read
 function openFile(){
-  dialog.showOpenDialog(mainWindow, {
+  dialog.showOpenDialog(childWindow, {
       properties: ['openFile'],
-      filters: [{name:'output', extensions: ['nmea','png','gif']}]
+      filters: [{extensions: ['json']}]
   }).then(result => {
       const file = result.filePaths[0];
+	  console.log(file);
       const fileContent = fs.readFileSync(file).toString();
-      // console.log(fileContent);
-      mainWindow.webContents.send('read:file', fileContent);
+      childWindow.webContents.send('read:file', fileContent);
   }).catch(err => {
       console.log(err)
   });
 }
-
 
 // NMEA parsing section
 
@@ -203,8 +202,7 @@ if(!String.prototype.startsWith){
 function parse (sentence) {
     mainWindow.webContents.on('did-finish-load', function () {
       mainWindow.webContents.send('parse:nmea', sentence);
-    });
-    
+    });  
 }
 
 function readTextFile(input, parse) {
@@ -252,6 +250,11 @@ ipcMain.on('open:settings',(event) => {
   newWindow(title, file, 600, 350, false);
 });
 
+ipcMain.on('show:browse', (event) => {
+	console.log('here');
+	openFile();
+});
+
 
 ipcMain.on('open:map',(event) => {  
   childWindow = new BrowserWindow({
@@ -270,6 +273,14 @@ ipcMain.on('open:map',(event) => {
   childWindow.loadFile(path.join(__dirname, `templates/map_tracker.html`));
 });
 
+ipcMain.on('browse:logs', (event) => {
+	dialog.showOpenDialog({
+		properties: ['openFile', 'multiSelections']
+	}, (files, err) => {
+		if(files) console.log(files);
+		else console.log(err);
+	});
+});
 
 
 ipcMain.on('make:command', (event, command) => {

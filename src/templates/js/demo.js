@@ -1,86 +1,42 @@
-function addMarkersToMap(map) {
-  var parisMarker = new H.map.Marker({lat:48.8567, lng:2.3508});
-  map.addObject(parisMarker);
-}
+var map, group, behavior, ui;
 
 var platform = new H.service.Platform({
-apikey: window.apikey
+  apikey: window.apikey
 });
+
 var defaultLayers = platform.createDefaultLayers();
 
-var map = new H.Map(document.getElementById('map'),
-defaultLayers.vector.normal.map,{
-center: {lat:50, lng:5},
-zoom: 4,
-//pixelRatio: window.devicePixelRatio || 1
-});
+function initMap(c_lat, c_lon) {
+	map = new H.Map(document.getElementById('map'),
+		defaultLayers.vector.normal.map,{
+		center: {lat: c_lat, lng: c_lon},
+		zoom: 4,
+		//pixelRatio: window.devicePixelRatio || 1
+	});
 
-window.addEventListener('resize', () => map.getViewPort().resize());
-
-var behavior = new H.mapevents.Behavior(new H.mapevents.MapEvents(map));
-
-var ui = H.ui.UI.createDefault(map, defaultLayers);
-
-window.onload = function () {
-addMarkersToMap(map);
+	window.addEventListener('resize', () => map.getViewPort().resize());
+	behavior = new H.mapevents.Behavior(new H.mapevents.MapEvents(map));
+	ui = H.ui.UI.createDefault(map, defaultLayers);
+	
+	addInfoBubble(map);
 }
 
-// /**
-//  * Pan the map so that it is continually in motion
-//  *
-//  * @param  {H.Map} map      A HERE Map instance within the application
-//  */
-// function panTheMap(map) {
-//   var viewPort,
-//       incX = 1,
-//       incY = 2,
-//       x = 100,
-//       y = 100;
+function addMarkerToGroup(lat, lon, html) {
+  var marker = new H.map.Marker({lat: lat, lng: lon});
+  marker.setData(html);
+  group.addObject(marker);
+}
 
-//   // Obtain the view port object of the map to manipulate its screen coordinates
-//   var viewPort = map.getViewPort(),
-//       // function calculates new screen coordinates and calls
-//       // viewport's interaction method with them
-//       pan = function() {
-//         x = x + incX;
-//         if (Math.abs(x) > 100) {
-//           incX = -incX;
-//         }
+function addInfoBubble(map, lat, lon,) {
+  group = new H.map.Group();
+  
+  map.addObject(group);
 
-//         y = y + incY;
-//         if (Math.abs(y) > 100) {
-//           incY = -incY;
-//         }
+  group.addEventListener('tap', function (evt) {
+    var bubble =  new H.ui.InfoBubble(evt.target.getGeometry(), {
+      content: evt.target.getData()
+    });
+    ui.addBubble(bubble);
+  }, false);
+}
 
-//         viewPort.interaction(x, y);
-//       };
-
-//   // set interaction modifier that provides information which map properties
-//   // change with each "interact" call
-//   viewPort.startInteraction(H.map.render.RenderEngine.InteractionModifiers.COORD, 0, 0);
-//   // set up simple animation loop
-//   setInterval(pan, 15);
-// }
-
-// /**
-//  * Boilerplate map initialization code starts below:
-//  */
-
-// //Step 1: initialize communication with the platform
-// // In your own code, replace variable window.apikey with your own apikey
-// var platform = new H.service.Platform({
-//   apikey: window.apikey
-// });
-// var defaultLayers = platform.createDefaultLayers();
-
-// // Step 2: initialize a map
-// var map = new H.Map(document.getElementById('map'),
-//   defaultLayers.vector.normal.map,{
-//   center: {lat: 19.11, lng: 72.89},
-//   zoom: 4,
-//   pixelRatio: window.devicePixelRatio || 1
-// });
-// // add a resize listener to make sure that the map occupies the whole container
-// window.addEventListener('resize', () => map.getViewPort().resize());
-
-// panTheMap(map);

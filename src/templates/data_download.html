@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" integrity="sha384-B0vP5xmATw1+K9KRQjQERJvTumQW0nPEzvF6L/Z6nronJ3oUOFUFpCjEUQouq2+l" crossorigin="anonymous">
 	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
 </head>
-<body>
+<body class="bg-light">
 	<div class="container text-center mt-3">
 		<h3>Data Download</h3>
 	</div>
@@ -23,12 +23,12 @@
 
 		window.onload = function () {
 			fetch("http://192.168.0.196/files")
-				.then(function(response) {
-					return response.text().then(function(file) {
+				.then(function (response) {
+					return response.text().then(function (file) {
 						var files = file.split(" ");
-						var data='<div class="list-group">';
-						
-						for (var i = 0; i< files.length-1; i++) {
+						var data = '<div class="list-group">';
+
+						for (var i = files.length - 1; i >= 0 files.length - 1; i--) {
 							var x = files[i];
 							var y = x.replace("/", "");
 							data = data + `<a download href="http://192.168.0.196/download/${y}" class="list-group-item btn btn-light mt-1"> ${y} <span class="fa fa-download"></span></a>`;
