@@ -9,6 +9,7 @@
     <link rel="stylesheet" type="text/css" href="https://js.api.here.com/v3/3.1/mapsjs-ui.css" />
     <link rel="stylesheet" type="text/css" href="./css/template.css" />
 	<link rel="stylesheet" href="./css/index.css">
+	<link rel="stylesheet" href="./css/demo.css">
     <script type="text/javascript" src='./js/test-credentials.js'></script>
     <script type="text/javascript" src="https://js.api.here.com/v3/3.1/mapsjs-core.js"></script>
     <script type="text/javascript" src="https://js.api.here.com/v3/3.1/mapsjs-service.js"></script>
@@ -25,16 +26,12 @@
 				</h4>
 			</div>
 			<div class="col-12 col-sm-3 custom-file">
-				<button id="choose" class="btn btn-secondary">choose file</button>
-                
-				<!--<select class="form-control">
-					<option>2020-02-12-12:00.csv</option>
-				</select>-->
+				<button class="btn btn-secondary" id="choose">choose file</button>
 			</div>
 			<div class="col-12 col-sm-3">
 				<div class="custom-control custom-switch custom-switch-lg pt-2">
-					<input type="checkbox" class="custom-control-input" id="customSwitch2">
-					<label class="custom-control-label" for="customSwitch2">Live View</label>
+					<input type="checkbox" class="custom-control-input" id="viewMode">
+					<label class="custom-control-label" for="viewMode">Live View</label>
 		        </div>
 			</div>
 			<div class="col-12 col-sm-3">
@@ -46,19 +43,15 @@
 
         <div class="dropdown-divider"></div>
 
+		<div class="row pt-3 pb-3" id="coordinates">
+			
+		</div>
+
 		<div class="row">
-
-			<div class="col-sm-3 bg-light mt-5" id="left">	
-				<div class="list-group mt-3">
-					<input type="text" class="form-control mt-2" placeholder="Latitude" id="lat" disabled>
-					<input type="text" class="form-control mt-2" placeholder="Longitude" id="lon" disabled>
-					<input type="text" class="form-control mt-2" placeholder="Altitude" id="alt" disabled>
-					<input type="text" class="form-control mt-2" placeholder="RTK Status" id="rtk" disabled>
-				</div>
-			</div>
-
 			<div class="col">
-				<div id="map"></div>
+				<div id="map" class="bg-light">
+					
+				</div>
 			</div>
 
 		</div>
@@ -69,15 +62,30 @@
 		
 		var path = "";
 		
+		var coordinates = '<div class="col"><input type="text" class="form-control" placeholder="Latitude" id="lat" disabled></div>'+
+						'<div class="col"><input type="text" class="form-control" placeholder="Longitude" id="lon" disabled></div>'+
+						'<div class="col"><input type="text" class="form-control" placeholder="Altitude" id="alt" disabled></div>'+
+						'<div class="col"><input type="text" class="form-control" placeholder="RTK Status" id="rtk" disabled></div>';
+		
+		var mode = document.querySelector('#viewMode');
+		mode.addEventListener('change', (event) => {
+			if (mode.checked) {
+				ipcRenderer.send('uart:status');
+				
+			} else {
+				document.querySelector('#coordinates').innerHTML = "";
+			}
+		});
+		
 		document.querySelector('#choose').addEventListener('click', (event) => {
 			ipcRenderer.send('show:browse');
 		});
+		
+		function showBrowse() {
+			ipcRenderer.send('show:browse');
+		}
+		
 		ipcRenderer.on('read:file', (event, data) => {
-			useMap(data);
-		});
-		
-		
-		function useMap(data) {
 			var con = data.split("&");
 			initMap(JSON.parse(con[0]).Latitude, JSON.parse(con[0]).Longitude);
 			for (var i = 0; i < con.length; i++){
@@ -85,12 +93,24 @@
 				var lat = c.Latitude;
 				var lon = c.Longitude;
 				var alt = c.Altitude;
-
 				var html = `<small class="text-muted">Lat: ${lat}<br>Lng: ${lon}<br>Alt: ${alt}</small>`;
-				addMarkerToGroup(lat, lon, html);
-				//await sleep(1000); 
+				useMap(lat, lon, html);
 			}
+		});
+		ipcRenderer.on('uart:status', (event, permission) => {
+			if (permission) {
+				document.querySelector('#coordinates').innerHTML = coordinates;
+			} else {
+				mode.checked = permission;
+				document.querySelector('#coordinates').innerHTML = "";
+			}
+		});
+		
+		
+		function useMap(lat, lon, html) {
+			addMarkerToGroup(lat, lon, html);
 		}
+		
 		if(path)
 			useMap();
 	</script>

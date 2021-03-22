@@ -1,10 +1,8 @@
 #map {
-    width: 95%;
-    height: 450px;
-    background: grey;
+	top: 0;
+	bottom: 0;
+	height:530px;
+    width: 100%;
+	/* background: grey; */
 }
 
-#panel {
-    width: 100%;
-    height: 400px;
-}
