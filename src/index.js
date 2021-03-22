@@ -73,39 +73,54 @@ ipcMain.on('load:device', (event)=>{
 
 // connecting to network via WiFi
 function connectWifi(net_ssid, password) {
+	disconnect();
   wifi.connect({ ssid: net_ssid, password: password }, error => {
     if (error) {
       console.log("Could not connect to "+net_ssid+" "+error);
       showNotification("Could not connect to "+net_ssid,error);
-      connType = 1;
+      connType = 0;
     }
     else{
       console.log('Connected to: ' + net_ssid);
       showNotification('Connected to: ', net_ssid);
       connType = 1;
     }
+	console.log(connType);
   });
+}
 
-  // disconnect from WiFi
-  // wifi.disconnect(error => {
-  //   if (error) {
-  //     console.log(error);
-  //   } else {
-  //     console.log('Disconnected');
-  //     showNotification('Disconnected','');
-  //   }
-  // });
+function disconnect() {
+	if (connType == 1){
+		wifi.disconnect(error => {
+			if (error) {
+				console.log(error);
+			} else {
+				connType = 0;
+				console.log('Disconnected');
+				showNotification('Disconnected','Wifi connection closed ');
+			}
+		});
+	}
+	if (connType == 2){
+		port.close(() => {
+			connType = 0;
+			showNotification('Disconnected','Serial connection closed ')
+		});
+	}
+	console.log(connType);
 }
 
 // opening the UART channel
 function loadUart(comp, baudRate) {
+	disconnect();
     port = "";
     port = new SerialPort(comp, parseInt(baudRate));
     
     port.on("open", () => {
       connType = 2;
       showNotification('Port opened with Baud Rate = '+baudRate);
-      console.log('Port opened with Baud Rate = '+baudRate)
+      console.log('Port opened with Baud Rate = '+baudRate);
+	  console.log(connType);
     });
     
     const parser = port.pipe(new Readline({ delimiter: '\n' }));
@@ -113,7 +128,7 @@ function loadUart(comp, baudRate) {
     parser.on('data', data => {
       console.log('Response from ESP-32: '+data);
       showNotification('Response from ESP-32: ', data);
-    });
+	});
 }
 
 //uart
@@ -268,7 +283,7 @@ ipcMain.on('open:map',(event) => {
     parent: mainWindow,
     modal: true
   });
-  //childWindow.maximize();
+  childWindow.maximize();
   childWindow.menuBarVisible = false;
   childWindow.loadFile(path.join(__dirname, `templates/map_tracker.html`));
 });
@@ -324,6 +339,23 @@ ipcMain.on('connect_wifi', (event, wifi_details) => {
   }
 });
 
+ipcMain.on('conn:close', (event) => {
+	disconnect();
+});
+
+ipcMain.on('uart:status', (event) => {
+	if (connType != 2) {
+		const messageBoxOptions = {
+			type: "error",
+			title: "Serial Port Closed",
+			message: "Please change conenction mode to Serial to view Live Feed"
+		};
+		dialog.showMessageBox(messageBoxOptions);
+		childWindow.webContents.send('uart:status', false);
+	} else {
+		childWindow.webContents.send('uart:status', true);
+	}
+});
 
 function sendOverWifi(command) {
   axios.get(`http://192.168.0.196/command/${command}`)

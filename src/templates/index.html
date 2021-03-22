@@ -295,6 +295,7 @@
 			console.log(conType);
 			if (conType == 0) {
 				document.getElementById('Connect').innerHTML = "";
+				ipcRenderer.send('conn:close');
 			}
 			else if(conType == 1) {
 				document.getElementById('Connect').innerHTML = wifi;
