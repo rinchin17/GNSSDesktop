@@ -13,58 +13,24 @@
         </h3>
         <div class="dropdown-divider"></div>
         <form>
-            
+
             <div class="row mt-3 ml-2">
                 <div class="col-4 mt-1">
-                   <p class="text-muted">Device Mode</p> 
+                    <p class="text-muted">Device Mode</p>
                 </div>
                 <div class="col-4"></div>
                 <div class="col-4">
                     <select name="mode" id="mode" class="form-control">
-                        <option>Rover</option>
-                        <option>Base</option>
+                        <option value="1">Base</option>
+                        <option value="2" selected>Rover</option>
                     </select>
                 </div>
             </div>
 
             <div class="dropdown-divider"></div>
 
-            <div class="row mt-2 ml-1">
-                <p><strong>Static Base</strong></p>
-                <div class="col-12">
-                    <div class="row">
-                        <div class="col-4 mt-1">
-                           <p class="text-muted">Latitude</p> 
-                        </div>
-                        <div class="col-2"></div>
-                        <div class="col-6">
-                            <input type="text" id="latitude" placeholder="Latitude" class="form-control">
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-4 mt-1">
-                           <p class="text-muted">Longitude</p> 
-                        </div>
-                        <div class="col-2"></div>
-                        <div class="col-6">
-                            <input type="text" id="longitude" placeholder="Longitude" class="form-control">
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <div class="row mt-2 ml-1" id="static_base">
 
-            <div class="dropdown-divider"></div>
-
-            <div class="row mt-2 ml-1">
-                <div class="col-5 mt-1">
-                    <p class="text-muted">Enter manual command</p> 
-                </div>
-                <div class="col-10">
-                    <input type="text" id="command" placeholder="Manual Command" class="form-control">
-                </div>
-                <div class="col-2">
-                    <button class="btn btn-outline-secondary" id="btnCommand" role="button" type="button">Send</button>
-                </div>              
             </div>
 
             <div class="dropdown-divider"></div>
@@ -72,28 +38,64 @@
             <div class="row">
                 <div class="col-5"></div>
                 <div class="col-5">
-                    <button class="btn btn-secondary">Apply All</button>
+                    <button type="button" class="btn btn-secondary">Apply All</button>
                 </div>
             </div>
 
+            <div class="dropdown-divider"></div>
         </form>
+        <div class="row mt-2 ml-1">
+            <div class="col-5 mt-1">
+                <p class="text-muted">Enter manual command</p>
+            </div>
+            <div class="col-10">
+                <input type="text" id="command" placeholder="Manual Command" class="form-control">
+            </div>
+            <div class="col-2">
+                <button class="btn btn-outline-secondary" id="btnCommand" role="button" type="button">Send</button>
+            </div>
+        </div>
     </div>
 
     <script>
         const electron = require('electron')
         const { ipcRenderer } = electron;
 
+        const mode = document.querySelector('#mode');
+        const sb = document.querySelector('#static_base');
+
+        const dsv = '<p><strong>Static Base</strong></p>'+
+                    '<div class="col-12">'+
+                        '<div class="row">'+
+                            '<div class="col-4 mt-1">'+
+                                '<p class="text-muted">Latitude</p>'+
+                            '</div>'+
+                            '<div class="col-2"></div>'+
+                            '<div class="col-6">'+
+                                '<input type="text" id="latitude" placeholder="Latitude" class="form-control">'+
+                            '</div>'+
+                        '</div>'+
+                        '<div class="row">'+
+                            '<div class="col-4 mt-1">'+
+                                '<p class="text-muted">Longitude</p>'+
+                            '</div>'+
+                            '<div class="col-2"></div>'+
+                            '<div class="col-6">'+
+                                '<input type="text" id="longitude" placeholder="Longitude" class="form-control">'+
+                            '</div>'+
+                        '</div>'+
+                    '</div>';
+
+        mode.addEventListener('change', (event) => {
+            if (mode.value == 1) {
+                sb.innerHTML = dsv;
+            } else {
+                sb.innerHTML = "";
+            }
+        });
+
         document.querySelector('#btnCommand').addEventListener('click', (event) => {
             var command = document.querySelector('#command').value;
-            // fetch(`http://192.168.0.196/command/${command}`)
-			// 	.then(function(response) {
-			// 		response.text().then(function(res) {
-            //             console.log(res);
-            //         });
-			// 	})
-			// 	.catch(function (error) {
-			// 		console.log("Error: " + error);
-			// 	});
             ipcRenderer.send('make:command', command);
         });
     </script>
