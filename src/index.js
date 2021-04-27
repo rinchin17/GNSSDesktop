@@ -1,6 +1,5 @@
 const { app, BrowserWindow, ipcMain, Menu, dialog, Notification } = require('electron');
 const axios = require('axios')
-const { request} = require('http');
 const path = require('path');
 const fs = require('fs'); 
 var md5 = require('md5');
@@ -8,12 +7,11 @@ var wifi = require('node-wifi');
 
 var connType = 0;
 
-//load wifi
+// load wifi
 ipcMain.on('load:wifi', (event)=>{  
 	wifi.init({
 		iface: null // network interface, choose a random wifi interface if set to null
 	});
-  
   
   // Scan networks
 	wifi.scan((error, networks) => {
@@ -27,8 +25,9 @@ ipcMain.on('load:wifi', (event)=>{
 			}
 			mainWindow.webContents.send('load:wifi',available_wifi);
 		}
-	});
-  // All functions also return promise if there is no callback given
+	});-
+  
+	// All functions also return promise if there is no callback given
 	wifi
 	.scan()
 	.then(networks => {
@@ -50,13 +49,13 @@ function showNotification (title, body) {
 function sendNmea(data) {
 	mainWindow.webContents.send('parse:nmea', data);
 }
-//uart
+// uart
 const SerialPort = require('serialport');
 const Readline = require('@serialport/parser-readline');
 
 let port;
 
-//load devices
+// load devices
 ipcMain.on('load:device', (event)=>{
 	let available_ports = [];
 	SerialPort.list().then(ports => {
@@ -148,12 +147,12 @@ function loadUart(comp, baudRate) {
 	});
 }
 
-//uart
+// uart
 if (require('electron-squirrel-startup')) {
 	app.quit();
 }
 
-//static declarations
+// static declarations
 let mainWindow;
 let childWindow;
 
@@ -345,6 +344,22 @@ ipcMain.on('connect_serial', (event, serial_details) => {
 	}
 });
 
+function NMEAStream(){
+	axios.get('http://192.168.0.188/livedata')
+	.then(response => {
+		// showNotification('Command sent Via Wi-Fi');
+		
+			sendNmea(response.data);
+			
+		console.log('Response from EZRTK'+ response.data);
+		
+	})
+	.catch(error => {
+		// showNotification('Response from EZRTK', 'Some error occured!!!');
+		console.log(error);
+	});
+}
+
 // connecting wifi
 ipcMain.on('connect_wifi', (event, wifi_details) => {
 	var ssid = wifi_details[0];
@@ -353,15 +368,16 @@ ipcMain.on('connect_wifi', (event, wifi_details) => {
 		return false;
 	} else {
 		connectWifi(ssid,password);
+		var timer = setInterval(NMEAStream, 2000);
 	}
 });
 
-//disconnect network or serial
+// disconnect network or serial
 ipcMain.on('conn:close', (event) => {
 	disconnect();
 });
 
-//check uart status to enable or disable live data
+// check uart status to enable or disable live data
 ipcMain.on('uart:status', (event) => {
 	if (connType != 2) {
 		const messageBoxOptions = {
@@ -377,7 +393,7 @@ ipcMain.on('uart:status', (event) => {
 });
 
 function sendOverWifi(command) {
-	axios.get(`http://192.168.0.196/command/${command}`)
+	axios.get(`http://192.168.0.192/command/${command}`)
 	.then(response => {
 		showNotification('Command sent Via Wi-Fi');
 		showNotification('Response from EZRTK', response.data);

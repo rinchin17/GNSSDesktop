@@ -156,7 +156,7 @@
 						<h5>Live Data Feed</h5>
 						<div class="list-group" id="feeds" style="height: 180px; overflow-y: scroll;">
 							<ul>
-								Connect to Serial Port to view Live Feeds...
+								<!-- Connect to Serial Port to view Live Feeds... -->
 							</ul>
 						</div>
 					</div>
@@ -191,10 +191,19 @@
 
 		// receiving and parsing nmea file
 		ipcRenderer.on('parse:nmea', (event, sentence) => {
-            const li = document.createElement('li');
-            const text = document.createTextNode(sentence);
-            li.appendChild(text);
-			ul.appendChild(li);
+			var split_list = sentence.split('\n');
+
+			for(var i=0;i<split_list.length;i++){
+				const li = document.createElement('li');
+				const text = document.createTextNode(split_list[i]);
+				li.appendChild(text);
+				ul.appendChild(li);
+			}
+
+            // const li = document.createElement('li');
+            // const text = document.createTextNode(sentence);
+            // li.appendChild(text);
+			// ul.appendChild(li);
 
 			document.getElementById('feeds').scrollIntoView();
 
