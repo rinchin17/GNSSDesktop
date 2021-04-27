@@ -133,7 +133,12 @@ function loadUart(comp, baudRate) {
 	const parser = port.pipe(new Readline({ delimiter: '\r\n' }));
 
 	parser.on('data', async data => {
-		await sendNmea(data);
+		try{
+			await sendNmea(data);
+		}
+		catch(err){
+			console.log(err);
+		}
 		//parse(data);
 		
 		//console.log('\nData : ', data);
