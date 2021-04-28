@@ -34,11 +34,6 @@
 					<label class="custom-control-label" for="viewMode">Live View</label>
 		        </div>
 			</div>
-			<div class="col-12 col-sm-3">
-				<button class="btn">
-					<span class="fa fa-globe text-primary"></span> Change view
-				</button>
-			</div>
 		</div>
 
         <div class="dropdown-divider"></div>
@@ -61,7 +56,9 @@
 		const { ipcRenderer } = require('electron');
 		
 		var path = "";
-		
+		var initialized = false;
+		var isLive = false;
+
 		var coordinates = '<div class="col"><input type="text" class="form-control" placeholder="Latitude" id="lat" disabled></div>'+
 						'<div class="col"><input type="text" class="form-control" placeholder="Longitude" id="lon" disabled></div>'+
 						'<div class="col"><input type="text" class="form-control" placeholder="Altitude" id="alt" disabled></div>'+
@@ -71,8 +68,9 @@
 		mode.addEventListener('change', (event) => {
 			if (mode.checked) {
 				ipcRenderer.send('uart:status');
-				
+				initialized = false;
 			} else {
+				isLive = false;
 				document.querySelector('#coordinates').innerHTML = "";
 			}
 		});
@@ -97,18 +95,39 @@
 				useMap(lat, lon, html);
 			}
 		});
+
 		ipcRenderer.on('uart:status', (event, permission) => {
 			if (permission) {
 				document.querySelector('#coordinates').innerHTML = coordinates;
+				isLive = true;
 			} else {
 				mode.checked = permission;
 				document.querySelector('#coordinates').innerHTML = "";
+				isLive = false;
+			}
+		});
+
+		ipcRenderer.on('live:feed', (event, coordinates) => {
+			if(isLive) {
+				if (!initialized) {
+					initMap(coordinates.Latitude, coordinates.Longitude);
+					initialized = true;
+				} else {
+					var c = coordinates;
+					var lat = c.Latitude;
+					var lon = c.Longitude;
+					var alt = c.Altitude;
+					var html = `<small class="text-muted">Lat: ${lat}<br>Lng: ${lon}<br>Alt: ${alt}</small>`;
+					useMap(lat, lon, html);
+					document.getElementById("lat").value = lat;
+					document.getElementById("lon").value = lon;
+					document.getElementById("alt").value = alt;
+				}
 			}
 		});
 		
-		
-		function useMap(lat, lon, html) {
-			addMarkerToGroup(lat, lon, html);
+		async function useMap(lat, lon, html) {
+			await addMarkerToGroup(lat, lon, html);
 		}
 		
 		if(path)

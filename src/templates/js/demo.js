@@ -21,7 +21,7 @@ function initMap(c_lat, c_lon) {
 	addInfoBubble(map);
 }
 
-function addMarkerToGroup(lat, lon, html) {
+async function addMarkerToGroup(lat, lon, html) {
   var marker = new H.map.Marker({lat: lat, lng: lon});
   marker.setData(html);
   group.addObject(marker);
