@@ -141,6 +141,9 @@ function loadUart(comp, baudRate) {
 		}
 		//parse(data);
 		
+		// $EZ_RTK|SET-WIFI|Subliminal|0123456789
+
+
 		//console.log('\nData : ', data);
 		
 		//var daten = [];
@@ -353,11 +356,8 @@ function NMEAStream(){
 	axios.get('http://192.168.0.188/livedata')
 	.then(response => {
 		// showNotification('Command sent Via Wi-Fi');
-		
-			sendNmea(response.data);
-			
+		sendNmea(response.data);	
 		console.log('Response from EZRTK'+ response.data);
-		
 	})
 	.catch(error => {
 		// showNotification('Response from EZRTK', 'Some error occured!!!');
@@ -398,7 +398,7 @@ ipcMain.on('uart:status', (event) => {
 });
 
 function sendOverWifi(command) {
-	axios.get(`http://192.168.0.192/command/${command}`)
+	axios.get(`http://192.168.0.188/command/${command}`)
 	.then(response => {
 		showNotification('Command sent Via Wi-Fi');
 		showNotification('Response from EZRTK', response.data);

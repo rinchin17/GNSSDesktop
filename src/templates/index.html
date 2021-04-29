@@ -193,17 +193,17 @@
 		ipcRenderer.on('parse:nmea', (event, sentence) => {
 			var split_list = sentence.split('\n');
 
-			for(var i=0;i<split_list.length;i++){
-				const li = document.createElement('li');
-				const text = document.createTextNode(split_list[i]);
-				li.appendChild(text);
-				ul.appendChild(li);
-			}
+			// for(var i=0;i<split_list.length;i++){
+			// 	const li = document.createElement('li');
+			// 	const text = document.createTextNode(split_list[i]);
+			// 	li.appendChild(text);
+			// 	ul.appendChild(li);
+			// }
 
-            // const li = document.createElement('li');
-            // const text = document.createTextNode(sentence);
-            // li.appendChild(text);
-			// ul.appendChild(li);
+            const li = document.createElement('li');
+            const text = document.createTextNode(sentence);
+            li.appendChild(text);
+			ul.appendChild(li);
 
 			document.getElementById('feeds').scrollIntoView();
 
