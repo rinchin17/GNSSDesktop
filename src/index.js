@@ -5,7 +5,11 @@ const fs = require('fs');
 var md5 = require('md5');
 var wifi = require('node-wifi');
 
+// static declarations
 var connType = 0;
+let mainWindow;
+let childWindow;
+let mapWindow;
 
 // load wifi
 ipcMain.on('load:wifi', (event)=>{  
@@ -47,6 +51,31 @@ function showNotification (title, body) {
 }
 
 function sendNmea(data) {
+	var x = data.split(",");
+	if(mapWindow) {
+		var lat,lon,alt;
+		if(data[0]=="$") {
+			var x = data.split(",");
+			if(x[4]=="S") {
+				lat = '-' + x[3];
+			} else {
+				lat = x[3];
+			}
+			if(x[6]=="W") {
+				lon = "-" + x[5];
+			} else {
+				lon = x[5];
+			}
+			alt = x[9];
+		}
+		var coordinates = {
+			Latitude: lat,
+			Longitude: lon,
+			Altitude: alt
+		}
+		console.log(coordinates);
+		mapWindow.webContents.send('live:feed', coordinates);
+	}
 	mainWindow.webContents.send('parse:nmea', data);
 }
 // uart
@@ -106,6 +135,7 @@ function disconnect() {
 			showNotification('Disconnected','Serial connection closed ')
 		});
 	}
+
 	console.log(connType);
 }
 
@@ -160,9 +190,6 @@ if (require('electron-squirrel-startup')) {
 	app.quit();
 }
 
-// static declarations
-let mainWindow;
-let childWindow;
 
 const createWindow = () => {
 	mainWindow = new BrowserWindow({
@@ -215,14 +242,14 @@ function newWindow(title, file, width, height, resizable) {
 
 // for selecting a file to read
 function openFile(){
-	dialog.showOpenDialog(childWindow, {
+	dialog.showOpenDialog(mapWindow, {
 		properties: ['openFile'],
 		filters: [{extensions: ['json']}]
 	}).then(result => {
 		const file = result.filePaths[0];
 		console.log(file);
 		const fileContent = fs.readFileSync(file).toString();
-		childWindow.webContents.send('read:file', fileContent);
+		mapWindow.webContents.send('read:file', fileContent);
 	}).catch(err => {
 		console.log(err)
 	});
@@ -298,7 +325,7 @@ ipcMain.on('show:browse', (event) => {
 
 //map window
 ipcMain.on('open:map',(event) => {  
-	childWindow = new BrowserWindow({
+	mapWindow = new BrowserWindow({
 		webPreferences: {
 			nodeIntegration: true,
 			contextIsolation: false
@@ -309,9 +336,9 @@ ipcMain.on('open:map',(event) => {
 		parent: mainWindow,
 		modal: true
 	});
-	childWindow.maximize();
-	childWindow.menuBarVisible = false;
-	childWindow.loadFile(path.join(__dirname, `templates/map_tracker.html`));
+	mapWindow.maximize();
+	mapWindow.menuBarVisible = false;
+	mapWindow.loadFile(path.join(__dirname, `templates/map_tracker.html`));
 });
 
 //file browse window
@@ -384,16 +411,16 @@ ipcMain.on('conn:close', (event) => {
 
 // check uart status to enable or disable live data
 ipcMain.on('uart:status', (event) => {
-	if (connType != 2) {
+	if (connType == 0) {
 		const messageBoxOptions = {
 			type: "error",
-			title: "Serial Port Closed",
-			message: "Please change conenction mode to Serial to view Live Feed"
+			title: "Device not connected",
+			message: "Please connect to serial or wifi channel to view live feed"
 		};
 		dialog.showMessageBox(messageBoxOptions);
-		childWindow.webContents.send('uart:status', false);
+		mapWindow.webContents.send('uart:status', false);
 	} else {
-		childWindow.webContents.send('uart:status', true);
+		mapWindow.webContents.send('uart:status', true);
 	}
 });
 
