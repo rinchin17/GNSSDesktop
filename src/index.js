@@ -10,6 +10,9 @@ var connType = 0;
 let mainWindow;
 let childWindow;
 let mapWindow;
+let downloadWindow;
+var IPAddress;
+var ch = 0;
 
 // load wifi
 ipcMain.on('load:wifi', (event)=>{  
@@ -29,7 +32,7 @@ ipcMain.on('load:wifi', (event)=>{
 			}
 			mainWindow.webContents.send('load:wifi',available_wifi);
 		}
-	});-
+	});
   
 	// All functions also return promise if there is no callback given
 	wifi
@@ -163,25 +166,25 @@ function loadUart(comp, baudRate) {
 	const parser = port.pipe(new Readline({ delimiter: '\r\n' }));
 
 	parser.on('data', async data => {
+		
+		if(ch==1){
+			IPAddress = data;
+			console.log("IP Address = "+IPAddress);
+			
+			ch = 0;
+		}
+		if(data == 'IP address: '){
+			ch = 1;
+		}
 		try{
 			await sendNmea(data);
 		}
 		catch(err){
 			console.log(err);
 		}
-		//parse(data);
 		
-		// $EZ_RTK|SET-WIFI|Subliminal|0123456789
+		// $EZ_RTK|SET-WIFI|Rinchin|airbud17	
 
-
-		//console.log('\nData : ', data);
-		
-		//var daten = [];
-		//daten = data.toString('hex');
-		//console.log('\nData no hex : ', daten);
-		//setState('Waterkotte.Daten.Rohdaten', daten & 0xFF, true);
-		
-		//showNotification('Response from ESP-32: ', data);
 	});
 }
 
@@ -255,8 +258,6 @@ function openFile(){
 	});
 }
 
-// NMEA parsing section
-//readTextFile(nmeaGps, parse);
 
 if(!String.prototype.startsWith){
 	String.prototype.startsWith = function (str) {
@@ -304,10 +305,21 @@ ipcMain.on('device:setup',(event) => {
 
 //download window
 ipcMain.on('open:download',(event) => {
-	file = 'data_download.html';
-	title = 'Download';
-
-	newWindow(title, file, 600, 550, false);
+	downloadWindow = new BrowserWindow({
+		webPreferences: {
+			nodeIntegration: true,
+			contextIsolation: false
+		},
+		title: 'Download Data',
+		width: 800,
+		height:580,
+		parent: mainWindow,
+		modal: true
+	});
+	
+	downloadWindow.menuBarVisible = false;
+	downloadWindow.loadFile(path.join(__dirname, `templates/data_download.html`));
+	
 });
 
 //settings window
@@ -361,6 +373,7 @@ ipcMain.on('make:command', (event, command) => {
 	}
 
 	command = command + md5(command);
+
 	//send command over UART
 	if(connType == 2)
 		sendOverUart(command);
@@ -379,8 +392,14 @@ ipcMain.on('connect_serial', (event, serial_details) => {
 	}
 });
 
+// sending Server's IP to downloadWindow
+
+ipcMain.on('read:IP', (event) => {
+	downloadWindow.webContents.send('read:IP', IPAddress);
+});
+
 function NMEAStream(){
-	axios.get('http://192.168.0.188/livedata')
+	axios.get(`http://${IPAddress}/livedata`)
 	.then(response => {
 		// showNotification('Command sent Via Wi-Fi');
 		sendNmea(response.data);	
@@ -425,10 +444,12 @@ ipcMain.on('uart:status', (event) => {
 });
 
 function sendOverWifi(command) {
-	axios.get(`http://192.168.0.188/command/${command}`)
+	axios.get(`http://${IPAddress}/command/${command}`)
 	.then(response => {
-		showNotification('Command sent Via Wi-Fi');
-		showNotification('Response from EZRTK', response.data);
+		// showNotification('Command sent Via Wi-Fi');
+		// showNotification('Response from EZRTK', response.data);
+		console.log('Command sent Via Wi-Fi'+command);
+		console.log('Response from EZRTK: '+response.data);
 	})
 	.catch(error => {
 		showNotification('Response from EZRTK', 'Some error occured!!!');

@@ -38,7 +38,7 @@
             <div class="row">
                 <div class="col-5"></div>
                 <div class="col-5">
-                    <button type="button" class="btn btn-secondary">Apply All</button>
+                    <button type="button" id="applyAll" class="btn btn-secondary">Apply All</button>
                 </div>
             </div>
 
@@ -97,6 +97,19 @@
         document.querySelector('#btnCommand').addEventListener('click', (event) => {
             var command = document.querySelector('#command').value;
             ipcRenderer.send('make:command', command);
+        });
+
+        document.querySelector('#applyAll').addEventListener('click', (event) => {
+            if(mode.value == 1){
+                var latitude = document.querySelector('#latitude').value;
+                var longitude = document.querySelector('#longitude').value;
+                console.log("lan:"+latitude+" lon"+longitude);
+                ipcRenderer.send('make:command', "$EZ_RTK|SET-MODE|BASE");
+            }
+            else{
+                ipcRenderer.send('make:command', "$EZ_RTK|SET-MODE|ROVER");
+            }
+            
         });
     </script>
 </body>

@@ -21,17 +21,19 @@
 	<script>
 		const { ipcRenderer } = require('electron');
 
-		window.onload = function () {
-			fetch("http://192.168.0.196/files")
+		ipcRenderer.send('read:IP');
+
+		ipcRenderer.on('read:IP', (event, IPAddress) => {
+			fetch(`http://${IPAddress}/files`)
 				.then(function (response) {
 					return response.text().then(function (file) {
 						var files = file.split(" ");
 						var data = '<div class="list-group">';
 
-						for (var i = files.length - 1; i >= 0 files.length - 1; i--) {
+						for (var i = files.length - 1; i >= 0 ; i--) {
 							var x = files[i];
 							var y = x.replace("/", "");
-							data = data + `<a download href="http://192.168.0.196/download/${y}" class="list-group-item btn btn-light mt-1"> ${y} <span class="fa fa-download"></span></a>`;
+							data = data + `<a download href="http://${IPAddress}/download/${y}" class="list-group-item btn btn-light mt-1"> ${y} <span class="fa fa-download"></span></a>`;
 						}
 						data = data + '</div>';
 						document.querySelector('#file_list').innerHTML = data;
@@ -40,7 +42,8 @@
 				.catch(function (error) {
 					console.log("Error: " + error);
 				});
-		}
+		});
+
 	</script>
 
 </body>
