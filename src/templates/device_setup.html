@@ -4,6 +4,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" integrity="sha384-B0vP5xmATw1+K9KRQjQERJvTumQW0nPEzvF6L/Z6nronJ3oUOFUFpCjEUQouq2+l" crossorigin="anonymous">
 	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="./css/index.css">
 </head>
 
 <body>
@@ -55,11 +56,87 @@
                 <button class="btn btn-outline-secondary" id="btnCommand" role="button" type="button">Send</button>
             </div>
         </div>
+
+        <div class="dropdown-divider mt-5 mb-0"></div>
+
+        <div class="row">
+            <div class="col-12 text-center">
+                <div class="custom-control custom-switch custom-switch-lg mt-5">
+                    <input type="checkbox" class="custom-control-input" id="viewMode">
+                    <label class="custom-control-label text-muted" for="viewMode">Network RTK</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="container" id="rtk_view">
+
+        </div>
+
     </div>
 
     <script>
         const electron = require('electron')
         const { ipcRenderer } = electron;
+        var rtkType;    // 0 for Hotspot, 1 for Wi-Fi
+        var count = 0;
+        
+        var rtk_mode = document.querySelector('#viewMode');
+
+        var rtk_view_net =  '<div class="row">'+
+                                '<div class="col-6 text-center">'+
+                                    '<input type="text" id="ssid" placeholder="Enter SSID" class="form-control mt-3 text-center">'+
+                                '</div>'+
+                                '<div class="col-5 text-center">'+
+                                    '<input type="password" id="password" placeholder="Enter Password" class="form-control mt-3 text-center">'+
+                                '</div>'+
+
+                                '<div class="col-1 mt-3">'+
+                                    '<i class="fa fa-eye pt-2 text-muted" id="togglePassword" onclick="changePasswordVisibility()"></i>'+
+                                '</div>'+
+                            '</div>'+
+
+                           
+
+                            '<div class="row text-center">'+
+                                '<div class="col-12">'+
+                                    '<button class="btn btn-outline-secondary mt-4" id="btnRTK" role="button" type="button">Connect</button>'+
+                                '</div>'+
+                            '</div>';
+
+        var rtk_view_hot =  '<div class="row text-center">'+
+                                '<div class="col-12">'+
+                                    '<button class="btn btn-outline-secondary mt-4" id="btnHotspotRTK" role="button" type="button">Use Hotspot RTK</button>'+
+                                '</div>'+
+                            '</div>';
+
+        ipcRenderer.send('read:rtkType');
+        
+        ipcRenderer.on('read:rtkType', (event, rtk_Type) => {
+            rtkType = rtk_Type;
+            if(rtkType == 1 && count==0){
+                rtk_mode.checked = true;
+                enableNetworkRTK();
+            }
+            else if(rtkType != 1 && count==0){
+                rtk_mode.checked = false;
+                enableHotspotRTK();
+            }
+            console.log("rtk type: "+rtkType);
+            count++;
+        });
+
+
+		rtk_mode.addEventListener('change', (event) => {
+			if (rtk_mode.checked) {
+                enableNetworkRTK();
+			}
+            else {
+                rtkType = 0;
+                ipcRenderer.send('read:rtkType',rtkType);
+				document.querySelector('#rtk_view').innerHTML = "";
+                enableHotspotRTK();
+			}
+		});
 
         const mode = document.querySelector('#mode');
         const sb = document.querySelector('#static_base');
@@ -99,6 +176,8 @@
             ipcRenderer.send('make:command', command);
         });
 
+        
+
         document.querySelector('#applyAll').addEventListener('click', (event) => {
             if(mode.value == 1){
                 var latitude = document.querySelector('#latitude').value;
@@ -109,7 +188,64 @@
             else{
                 ipcRenderer.send('make:command', "$EZ_RTK|SET-MODE|ROVER");
             }
-            
         });
+
+        function enableNetworkRTK(){
+            rtkType = 1;
+            ipcRenderer.send('read:rtkType',rtkType);
+            document.querySelector('#rtk_view').innerHTML = rtk_view_net;
+            document.querySelector('#btnRTK').addEventListener('click', (event) => {
+                var ssid = document.querySelector('#ssid').value;
+                var password = document.querySelector('#password').value;
+                
+                if(ssid.length>0 && password.length>=8){
+                    // var command = "$EZ_RTK|SET-WIFI|"+ssid+"|"+password;
+                    var command = "connect,$EZ_RTK,SET-WIFI,"+ssid+","+password;
+                    var credentials = {ssid,password};
+                    console.log(credentials);
+                    ipcRenderer.send('read:credentials', credentials);
+                    ipcRenderer.send('make:command', command);
+                    console.log("from device setup,"+command);
+                }
+                else{
+                    console.log("enter valid ssid and password");
+                }
+                
+            });
+        }
+
+        function enableHotspotRTK(){
+            rtkType = 0;
+            ipcRenderer.send('read:rtkType',rtkType);
+            document.querySelector('#rtk_view').innerHTML = rtk_view_hot;
+            document.querySelector('#btnHotspotRTK').addEventListener('click', (event) => {
+                var ssid = "$EZ_RTK";
+                var password = "1234567890";
+                
+                if(ssid.length>0 && password.length>=8){
+                    var command = "$EZ_RTK|SET-WIFI|"+ssid+"|"+password;
+                    var credentials = {ssid,password};
+                    console.log(credentials);
+                    ipcRenderer.send('read:credentials', credentials);
+                }
+                else{
+                    console.log("enter valid ssid and password");
+                }
+                
+            });
+        }
+
+        function changePasswordVisibility(){
+            var password_field = document.getElementById('password');
+
+            if(password_field.type === "password"){
+                password_field.type = "text";
+            }
+            else{
+                password_field.type = "password";
+            }
+            var toggle = document.getElementById('togglePassword');
+            toggle.classList.toggle('fa-eye-slash');
+        }
     </script>
 </body>

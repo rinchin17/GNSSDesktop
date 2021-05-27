@@ -11,8 +11,12 @@ let mainWindow;
 let childWindow;
 let mapWindow;
 let downloadWindow;
-var IPAddress;
+let deviceSetupWindow;
+var hotSpotIP = "192.168.4.1";
+var IPAddress = hotSpotIP;
 var ch = 0;
+var rtkType = 0;
+var read_ssid,read_password;
 
 // load wifi
 ipcMain.on('load:wifi', (event)=>{  
@@ -104,6 +108,9 @@ ipcMain.on('load:device', (event)=>{
 
 // connecting to network via WiFi
 function connectWifi(net_ssid, password) {
+	wifi.init({
+		iface: null // network interface, choose a random wifi interface if set to null
+	});
 	disconnect();
 	wifi.connect({ ssid: net_ssid, password: password }, error => {
 		if (error) {
@@ -170,8 +177,8 @@ function loadUart(comp, baudRate) {
 		if(ch==1){
 			IPAddress = data;
 			console.log("IP Address = "+IPAddress);
-			
 			ch = 0;
+			connectWifi(read_ssid, read_password);
 		}
 		if(data == 'IP address: '){
 			ch = 1;
@@ -183,7 +190,8 @@ function loadUart(comp, baudRate) {
 			console.log(err);
 		}
 		
-		// $EZ_RTK|SET-WIFI|Rinchin|airbud17	
+		// $EZ_RTK|SET-WIFI|Rinchin|airbud17
+		// $EZ_RTK|SET-WIFI|$EZ_RTK|1234567890
 
 	});
 }
@@ -297,10 +305,21 @@ function readTextFile(input, parse) {
 
 //device setup window
 ipcMain.on('device:setup',(event) => {
-	file = 'device_setup.html';
-	title = 'Device Setup';
-
-	newWindow(title, file, 600, 500, false);
+	deviceSetupWindow
+	deviceSetupWindow = new BrowserWindow({
+		webPreferences: {
+			nodeIntegration: true,
+			contextIsolation: false
+		},
+		title: 'Device Setup',
+		width: 600,
+		height:700,
+		parent: mainWindow,
+		modal: true
+	});
+	
+	deviceSetupWindow.menuBarVisible = false;
+	deviceSetupWindow.loadFile(path.join(__dirname, `templates/device_setup.html`));
 });
 
 //download window
@@ -328,6 +347,14 @@ ipcMain.on('open:settings',(event) => {
 	title = 'Settings';
 
 	newWindow(title, file, 600, 350, false);
+});
+
+// dev tools window
+ipcMain.on('open:devtools',(event) => {
+	file = 'devtools.html';
+	title = 'Dev Tools';
+
+	newWindow(title, file, 600, 270, false);
 });
 
 //file browse call
@@ -363,22 +390,61 @@ ipcMain.on('browse:logs', (event) => {
 	});
 });
 
+// sending the state of App, either Hotspot mode or Wi-FI mode
+ipcMain.on('read:rtkType', (event, rtk) => {
+	deviceSetupWindow.webContents.send('read:rtkType', rtkType);
+	rtkType = rtk;
+	// setting the state of App
+	if(rtkType == 0){
+		IPAddress = hotSpotIP;
+	}
+});
+
+// sending the state of App, either Hotspot mode or Wi-FI mode
+ipcMain.on('read:IPDevTools', (event, ip) => {
+	if(rtkType != 0){
+		IPAddress = ip;
+	}
+});
+
+// reading the last connected Wi-Fi credentials
+
+ipcMain.on('read:credentials', (event, credentials) => {
+	read_ssid = credentials.ssid;
+	read_password = credentials.password;
+
+	if(read_ssid == "$EZ_RTK" && read_password == "1234567890"){
+		connectWifi(read_ssid, read_password);
+	}
+});
+
+
+// sending Server's IP to downloadWindow
+ipcMain.on('read:IP', (event) => {
+	downloadWindow.webContents.send('read:IP', IPAddress);
+});
+
+
+
+
 //send command
 ipcMain.on('make:command', (event, command) => {
-	var command = command;
-
+	// command = command + md5(command);
+	console.log('make got command: '+command+" conntype: "+connType);
 	if (command.length <= 0) {
 		showNotification('Command Error!', "Empty string");
 		console.log('empty command');
 	}
 
-	command = command + md5(command);
+	else{
+		//send command over UART
+		if(connType == 2)
+			sendOverUart(command);
 
-	//send command over UART
-	if(connType == 2)
-		sendOverUart(command);
-	if(connType == 1)
-		sendOverWifi(command);
+		//send command over Wi-Fi
+		else if(connType == 1)
+			sendOverWifi(command);
+	}
 });
 
 // opening serial port with baudRate
@@ -392,12 +458,6 @@ ipcMain.on('connect_serial', (event, serial_details) => {
 	}
 });
 
-// sending Server's IP to downloadWindow
-
-ipcMain.on('read:IP', (event) => {
-	downloadWindow.webContents.send('read:IP', IPAddress);
-});
-
 function NMEAStream(){
 	axios.get(`http://${IPAddress}/livedata`)
 	.then(response => {
@@ -407,7 +467,7 @@ function NMEAStream(){
 	})
 	.catch(error => {
 		// showNotification('Response from EZRTK', 'Some error occured!!!');
-		console.log(error);
+		// console.log(error);
 	});
 }
 
@@ -444,20 +504,45 @@ ipcMain.on('uart:status', (event) => {
 });
 
 function sendOverWifi(command) {
-	axios.get(`http://${IPAddress}/command/${command}`)
-	.then(response => {
-		// showNotification('Command sent Via Wi-Fi');
-		// showNotification('Response from EZRTK', response.data);
-		console.log('Command sent Via Wi-Fi'+command);
-		console.log('Response from EZRTK: '+response.data);
-	})
-	.catch(error => {
-		showNotification('Response from EZRTK', 'Some error occured!!!');
-		console.log(error);
-	});
+	
+	if(command.substring(0,8) == 'connect,'){
+		var sub_command = command.substring(8,command.length);
+		axios.get(`http://${IPAddress}/connect/${sub_command}`)
+		.then(response => {
+			// showNotification('Command sent Via Wi-Fi');
+			// showNotification('Response from EZRTK', response.data);
+			console.log('Command sent Via Wi-Fi: '+sub_command);
+			IPAddress = response.data;
+			console.log('Response, IP = '+IPAddress);
+			if(response.data){
+				connectWifi(read_ssid, read_password);
+			}
+		})
+		.catch(error => {
+			showNotification('Response from EZRTK', 'Some error occured!!!');
+			console.log(error);
+		});
+	}
+	else{
+		axios.get(`http://${IPAddress}/command/${command}`)
+		.then(response => {
+			// showNotification('Command sent Via Wi-Fi');
+			// showNotification('Response from EZRTK', response.data);
+			console.log('Command sent Via Wi-Fi'+command);
+			console.log('Response from EZRTK: '+response.data);
+		})
+		.catch(error => {
+			showNotification('Response from EZRTK', 'Some error occured!!!');
+			console.log(error);
+		});
+	}
 }
 
+
 function sendOverUart(command) {
+	if(command.substring(0,8) == 'connect,'){
+		command = command.substring(8,command.length);
+	}
 	port.write(command, (err) => {
 		if(!err) {
 			showNotification('Command sent Via UART : ', command);

@@ -17,6 +17,7 @@
                     <button id="map" class="list-group-item btn btn-outline-dark mt-2"><span class="fa fa-map-marker"></span> Map Tracker</button>
                     <button id="settings" class="list-group-item btn btn-outline-dark mt-2"><span class="fa fa-cogs"></span> Settings</button>
 					<button id="setup" class="list-group-item btn btn-outline-dark mt-2"><span class="fa fa-cog"></span> Device Setup</button>
+					<button id="devtools" class="list-group-item btn btn-outline-dark mt-2"><span class="fa fa-code"></span> Dev Tools</button>
                 </div>
             </div>
 
@@ -168,6 +169,12 @@
 	<script>
 		const { ipcRenderer } = require('electron');
 
+		window.onload = (event) => {
+			console.log('page is fully loaded');
+			var hotspot_credentials = {ssid:'$EZ_RTK',password:'1234567890'};
+			ipcRenderer.send('read:credentials', hotspot_credentials);
+		};
+
 		//Menu selectors
 		document.querySelector('#device').addEventListener('click', (event) => {
 			ipcRenderer.send('open:device');
@@ -180,6 +187,10 @@
 		});
 		document.querySelector('#settings').addEventListener('click', (event) => {
 			ipcRenderer.send('open:settings');
+		});
+
+		document.querySelector('#devtools').addEventListener('click', (event) => {
+			ipcRenderer.send('open:devtools');
 		});
 
 		//Device setup
