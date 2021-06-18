@@ -15,8 +15,8 @@
 					<button id="device" class="list-group-item btn btn-outline-dark mt-5"><span class="fa fa-desktop"></span> Device</button>
                     <button id="download" class="list-group-item btn btn-outline-dark mt-2"><span class="fa fa-download"></span> Download</button>
                     <button id="map" class="list-group-item btn btn-outline-dark mt-2"><span class="fa fa-map-marker"></span> Map Tracker</button>
-                    <button id="settings" class="list-group-item btn btn-outline-dark mt-2"><span class="fa fa-cogs"></span> Settings</button>
-					<button id="setup" class="list-group-item btn btn-outline-dark mt-2"><span class="fa fa-cog"></span> Device Setup</button>
+                    <button id="setup" class="list-group-item btn btn-outline-dark mt-2"><span class="fa fa-signal"></span> Network RTK</button>
+					<button id="settings" class="list-group-item btn btn-outline-dark mt-2"><span class="fa fa-cogs"></span> Settings</button>
 					<button id="devtools" class="list-group-item btn btn-outline-dark mt-2"><span class="fa fa-code"></span> Dev Tools</button>
                 </div>
             </div>
@@ -30,9 +30,13 @@
 					<div class="col-4">
 						<select id="comm_type" class="form-control" onchange="connChange()">
 							<option value="0"> --- None --- </option>
-							<option value="1">WiFi</option>
-							<option value="2">Serial Port</option>
+							<option value="1">Wireless</option>
+							<option value="2">Wired</option>
 						</select>
+					</div>
+
+					<div class="col-4" id="wifi1">
+
 					</div>
 				</div>
 
@@ -169,11 +173,11 @@
 	<script>
 		const { ipcRenderer } = require('electron');
 
-		window.onload = (event) => {
-			console.log('page is fully loaded');
-			var hotspot_credentials = {ssid:'$EZ_RTK',password:'1234567890'};
-			ipcRenderer.send('read:credentials', hotspot_credentials);
-		};
+		// window.onload = (event) => {
+		// 	console.log('page is fully loaded');
+		// 	var hotspot_credentials = {ssid:'$EZ_RTK',password:'1234567890'};
+		// 	ipcRenderer.send('read:credentials', hotspot_credentials);
+		// };
 
 		//Menu selectors
 		document.querySelector('#device').addEventListener('click', (event) => {
@@ -260,12 +264,18 @@
 			// removing the last selected serial port and baudRate
 			serial_details.pop();
 			serial_details.pop();
+
+			document.getElementById('wifi1').innerHTML = '<button type="button" onclick="serialPassthrough()" class="btn btn-outline-secondary">Serial Passthrough  <i class="fa fa-angle-double-right"></i></button>';
 		}
 
 		// sending selected wifi
 		function connectWifi() {
-			var wifi = document.querySelector('#wifi').value;
-			var password = document.querySelector('#password').value;
+			// var wifi = document.querySelector('#wifi').value;
+			// var password = document.querySelector('#password').value;
+
+			var wifi = "$EZ_RTK";
+			var password = "1234567890";
+
 			console.log(wifi + " " + password);
 			var wifi_details = [];
 
@@ -301,21 +311,27 @@
 			}
 		});
 
-		var wifi = '<div class="col-4">'+
-						'<select id="wifi" class="form-control">' +
-							
-						'</select>'+
-					'</div>'+
-					'<div class="col-4">'+
-						'<input id="password" type="password" value="bedrock@8540" class="form-control" placeholder="Password">'+
-					'</div>'+
-					'<div class="col-4">'+
-						'<button type="button" onclick="connectWifi()" class="btn btn-outline-secondary">Connect <i class="fa fa-plug"></i></button>'+
-					'</div>';
+		function serialPassthrough(){
+			ipcRenderer.send('make:command','$EZ_RTK,GNSS-VIEWER,RTKCOMMAND');
+		}
 
+		// var wifi = '<div class="col-4">'+
+		// 				'<select id="wifi" class="form-control">' +
+							
+		// 				'</select>'+
+		// 			'</div>'+
+		// 			'<div class="col-4">'+
+		// 				'<input id="password" type="password" value="bedrock@8540" class="form-control" placeholder="Password">'+
+		// 			'</div>'+
+		// 			'<div class="col-4">'+
+		// 				'<button type="button" onclick="connectWifi()" class="btn btn-outline-secondary">Connect <i class="fa fa-plug"></i></button>'+
+		// 			'</div>';
+
+		var wifi = '<button type="button" onclick="connectWifi()" class="btn btn-outline-secondary">Connect <i class="fa fa-plug"></i></button>';
+						
 		var serial = '<div class="col-4"><select id="serial_port" class="form-control"></select></div>' +
 					'<div class="col-4"><select id="baudRate" class="form-control">'+
-						'<option>9600</option><option>115200</option></select>'+
+						'<option>4800</option><option>9600</option><option>115200</option></select>'+
 					'</div>'+
 					'<div class="col-4"><button type="button" id="connect_serial" onclick="connectSerial()" class="btn btn-outline-secondary">Connect <i class="fa fa-plug"></i></button></div>';
 
@@ -325,13 +341,17 @@
 			console.log(conType);
 			if (conType == 0) {
 				document.getElementById('Connect').innerHTML = "";
+				document.getElementById('wifi1').innerHTML = "";
 				ipcRenderer.send('conn:close');
 			}
 			else if(conType == 1) {
-				document.getElementById('Connect').innerHTML = wifi;
+				document.getElementById('wifi1').innerHTML = wifi;
+				document.getElementById('Connect').innerHTML = "";
 				ipcRenderer.send('load:wifi');
-			} else {
+			} 
+			else {
 				document.getElementById('Connect').innerHTML = serial;
+				document.getElementById('wifi1').innerHTML = "";
 				ipcRenderer.send('load:device');
 			}
 		}

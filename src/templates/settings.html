@@ -55,17 +55,136 @@
             <div class="row mt-3">
                 <div class="col-5"></div>
                 <div class="col-5">
-                    <button class="btn btn-secondary">Apply All</button>
+                    <button class="btn btn-secondary">Apply</button>
                 </div>
             </div>
 
         </form>
+
+        <div class="dropdown-divider mt-2 mb-0"></div>
+
+        <div class="container">
+            <h5 class="mt-2">
+                Device Setup
+            </h5>
+            <div class="dropdown-divider"></div>
+            <form>
+    
+                <div class="row mt-3 ml-2">
+                    <div class="col-4 mt-1">
+                        <p class="text-muted">Device Mode</p>
+                    </div>
+                    <div class="col-4"></div>
+                    <div class="col-4">
+                        <select name="mode" id="mode" class="form-control">
+                            <option value="1">Base</option>
+                            <option value="2" selected>Rover</option>
+                        </select>
+                    </div>
+                </div>
+    
+                <div class="dropdown-divider"></div>
+    
+                <div class="row mt-2 ml-1" id="static_base">
+    
+                </div>
+    
+                <div class="dropdown-divider"></div>
+    
+                <div class="row">
+                    <div class="col-5"></div>
+                    <div class="col-5">
+                        <button type="button" id="applyAll" class="btn btn-secondary">Apply</button>
+                    </div>
+                </div>
+    
+                <div class="dropdown-divider"></div>
+            </form>
+
+            <div class="mt-1">
+                <h5>
+                    Manual command
+                </h5>
+            </div>
+
+            <div class="dropdown-divider mt-3 mb-0"></div>
+
+            <div class="row mt-3 ml-1">
+                
+                <div class="col-10">
+                    <input type="text" id="command" placeholder="Enter Manual Command" class="form-control">
+                </div>
+                <div class="col-2">
+                    <button class="btn btn-outline-secondary" id="btnCommand" role="button" type="button">Send</button>
+                </div>
+            </div>
+    
+            <div class="dropdown-divider mt-3 mb-0"></div>
+    
+           
+    
+        </div>
     </div>
 	
 	<script>
+        const electron = require('electron')
+        const { ipcRenderer } = electron;
+
 		function ldir() {
 			var x = document.getElementById('customFile').value;
 			console.log(x);
 		}
+
+        const mode = document.querySelector('#mode');
+        const sb = document.querySelector('#static_base');
+
+        const dsv = '<p><strong>Static Base</strong></p>'+
+                    '<div class="col-12">'+
+                        '<div class="row">'+
+                            '<div class="col-4 mt-1">'+
+                                '<p class="text-muted">Latitude</p>'+
+                            '</div>'+
+                            '<div class="col-2"></div>'+
+                            '<div class="col-6">'+
+                                '<input type="text" id="latitude" placeholder="Latitude" class="form-control">'+
+                            '</div>'+
+                        '</div>'+
+                        '<div class="row">'+
+                            '<div class="col-4 mt-1">'+
+                                '<p class="text-muted">Longitude</p>'+
+                            '</div>'+
+                            '<div class="col-2"></div>'+
+                            '<div class="col-6">'+
+                                '<input type="text" id="longitude" placeholder="Longitude" class="form-control">'+
+                            '</div>'+
+                        '</div>'+
+                    '</div>';
+
+        mode.addEventListener('change', (event) => {
+            if (mode.value == 1) {
+                sb.innerHTML = dsv;
+            } else {
+                sb.innerHTML = "";
+            }
+        });
+
+        document.querySelector('#btnCommand').addEventListener('click', (event) => {
+            var command = document.querySelector('#command').value;
+            ipcRenderer.send('make:command', command);
+        });
+
+        
+
+        document.querySelector('#applyAll').addEventListener('click', (event) => {
+            if(mode.value == 1){
+                var latitude = document.querySelector('#latitude').value;
+                var longitude = document.querySelector('#longitude').value;
+                console.log("lan:"+latitude+" lon"+longitude);
+                ipcRenderer.send('make:command', "$EZ_RTK,SET-MODE,BASE");
+            }
+            else{
+                ipcRenderer.send('make:command', "$EZ_RTK,SET-MODE,ROVER");
+            }
+        });
 	</script>
 </body>

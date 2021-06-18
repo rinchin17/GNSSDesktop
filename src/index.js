@@ -1,5 +1,5 @@
 const { app, BrowserWindow, ipcMain, Menu, dialog, Notification } = require('electron');
-const axios = require('axios')
+const axios = require('axios');
 const path = require('path');
 const fs = require('fs'); 
 var md5 = require('md5');
@@ -305,7 +305,6 @@ function readTextFile(input, parse) {
 
 //device setup window
 ipcMain.on('device:setup',(event) => {
-	deviceSetupWindow
 	deviceSetupWindow = new BrowserWindow({
 		webPreferences: {
 			nodeIntegration: true,
@@ -313,7 +312,7 @@ ipcMain.on('device:setup',(event) => {
 		},
 		title: 'Device Setup',
 		width: 600,
-		height:700,
+		height:450,
 		parent: mainWindow,
 		modal: true
 	});
@@ -346,7 +345,7 @@ ipcMain.on('open:settings',(event) => {
 	file = 'settings.html';
 	title = 'Settings';
 
-	newWindow(title, file, 600, 350, false);
+	newWindow(title, file, 650, 800, false);
 });
 
 // dev tools window
@@ -479,7 +478,9 @@ ipcMain.on('connect_wifi', (event, wifi_details) => {
 		return false;
 	} else {
 		connectWifi(ssid,password);
-		var timer = setInterval(NMEAStream, 2000);
+		if(connType == 1){
+			var timer = setInterval(NMEAStream, 2000);
+		}
 	}
 });
 
@@ -528,7 +529,7 @@ function sendOverWifi(command) {
 		.then(response => {
 			// showNotification('Command sent Via Wi-Fi');
 			// showNotification('Response from EZRTK', response.data);
-			console.log('Command sent Via Wi-Fi'+command);
+			console.log('Command sent Via Wi-Fi: '+command);
 			console.log('Response from EZRTK: '+response.data);
 		})
 		.catch(error => {

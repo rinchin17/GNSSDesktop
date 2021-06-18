@@ -9,68 +9,31 @@
 
 <body>
     <div class="container">
-        <h3 class="mt-2">
-            Device Setup
+        <h3 class="mt-3">
+            Network RTK
         </h3>
+
         <div class="dropdown-divider"></div>
-        <form>
-
-            <div class="row mt-3 ml-2">
-                <div class="col-4 mt-1">
-                    <p class="text-muted">Device Mode</p>
-                </div>
-                <div class="col-4"></div>
-                <div class="col-4">
-                    <select name="mode" id="mode" class="form-control">
-                        <option value="1">Base</option>
-                        <option value="2" selected>Rover</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="dropdown-divider"></div>
-
-            <div class="row mt-2 ml-1" id="static_base">
-
-            </div>
-
-            <div class="dropdown-divider"></div>
-
-            <div class="row">
-                <div class="col-5"></div>
-                <div class="col-5">
-                    <button type="button" id="applyAll" class="btn btn-secondary">Apply All</button>
-                </div>
-            </div>
-
-            <div class="dropdown-divider"></div>
-        </form>
+        
         <div class="row mt-2 ml-1">
-            <div class="col-5 mt-1">
-                <p class="text-muted">Enter manual command</p>
-            </div>
-            <div class="col-10">
-                <input type="text" id="command" placeholder="Manual Command" class="form-control">
-            </div>
-            <div class="col-2">
-                <button class="btn btn-outline-secondary" id="btnCommand" role="button" type="button">Send</button>
-            </div>
+            <div class="col-12 mt-3 text-center">
+                <span class="fa fa-info-circle text-muted mt-1 mr-1"></span><span class="text-muted">Toggle the switch to turn on/off Network RTK</span>
+            </div>  
         </div>
 
-        <div class="dropdown-divider mt-5 mb-0"></div>
+        <div class="dropdown-divider mt-4"></div>
 
         <div class="row">
             <div class="col-12 text-center">
-                <div class="custom-control custom-switch custom-switch-lg mt-5">
+                <div class="custom-control custom-switch custom-switch-lg mt-3">
                     <input type="checkbox" class="custom-control-input" id="viewMode">
-                    <label class="custom-control-label text-muted" for="viewMode">Network RTK</label>
+                    <label class="custom-control-label" for="viewMode">Network RTK</label>
                 </div>
             </div>
-        </div>
-
-        <div class="container" id="rtk_view">
-
-        </div>
+        </div>    
+    </div>
+    
+    <div class="container" id="rtk_view">
 
     </div>
 
@@ -138,57 +101,7 @@
 			}
 		});
 
-        const mode = document.querySelector('#mode');
-        const sb = document.querySelector('#static_base');
-
-        const dsv = '<p><strong>Static Base</strong></p>'+
-                    '<div class="col-12">'+
-                        '<div class="row">'+
-                            '<div class="col-4 mt-1">'+
-                                '<p class="text-muted">Latitude</p>'+
-                            '</div>'+
-                            '<div class="col-2"></div>'+
-                            '<div class="col-6">'+
-                                '<input type="text" id="latitude" placeholder="Latitude" class="form-control">'+
-                            '</div>'+
-                        '</div>'+
-                        '<div class="row">'+
-                            '<div class="col-4 mt-1">'+
-                                '<p class="text-muted">Longitude</p>'+
-                            '</div>'+
-                            '<div class="col-2"></div>'+
-                            '<div class="col-6">'+
-                                '<input type="text" id="longitude" placeholder="Longitude" class="form-control">'+
-                            '</div>'+
-                        '</div>'+
-                    '</div>';
-
-        mode.addEventListener('change', (event) => {
-            if (mode.value == 1) {
-                sb.innerHTML = dsv;
-            } else {
-                sb.innerHTML = "";
-            }
-        });
-
-        document.querySelector('#btnCommand').addEventListener('click', (event) => {
-            var command = document.querySelector('#command').value;
-            ipcRenderer.send('make:command', command);
-        });
-
         
-
-        document.querySelector('#applyAll').addEventListener('click', (event) => {
-            if(mode.value == 1){
-                var latitude = document.querySelector('#latitude').value;
-                var longitude = document.querySelector('#longitude').value;
-                console.log("lan:"+latitude+" lon"+longitude);
-                ipcRenderer.send('make:command', "$EZ_RTK|SET-MODE|BASE");
-            }
-            else{
-                ipcRenderer.send('make:command', "$EZ_RTK|SET-MODE|ROVER");
-            }
-        });
 
         function enableNetworkRTK(){
             rtkType = 1;
@@ -199,7 +112,7 @@
                 var password = document.querySelector('#password').value;
                 
                 if(ssid.length>0 && password.length>=8){
-                    // var command = "$EZ_RTK|SET-WIFI|"+ssid+"|"+password;
+                    // var command = "$EZ_RTK,SET-WIFI,"+ssid+","+password;
                     var command = "connect,$EZ_RTK,SET-WIFI,"+ssid+","+password;
                     var credentials = {ssid,password};
                     console.log(credentials);
