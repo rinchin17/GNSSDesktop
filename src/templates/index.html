@@ -172,6 +172,8 @@
 
 	<script>
 		const { ipcRenderer } = require('electron');
+		var status_wifi = false;
+		var status_serial = false;
 
 		// window.onload = (event) => {
 		// 	console.log('page is fully loaded');
@@ -201,6 +203,29 @@
 		document.querySelector('#setup').addEventListener('click', (event) => {
 			ipcRenderer.send('device:setup');
 		});
+
+		// Status of Wi-Fi Connection: true or false
+		ipcRenderer.on('status:wifi', (event, status) => {
+			if(status==true){
+				status_wifi = true;
+				document.getElementById('connect_wifi').innerHTML = "Disconnect";
+			}
+			else{
+				status_wifi = false;
+			}
+		});
+
+		// Status of Serial Connection: true or false
+		ipcRenderer.on('status:serial', (event, status) => {
+			if(status==true){
+				status_serial = true;
+				document.getElementById('connect_serial').innerHTML = "Disconnect";
+			}
+			else{
+				status_serial = false;
+			}
+		});
+		
 
 		const ul = document.querySelector('ul');
 
@@ -250,53 +275,77 @@
 		
 		// sending selected port and baudRate
 		function connectSerial() {
-			var p = document.querySelector('#serial_port').value;
-			var baudRate = document.querySelector('#baudRate').value;
-			var serial_details = [];
+			if(status_serial == true){
+				ipcRenderer.send('disconnect');
+				status_serial = false;
+				console.log('dis');
+				document.getElementById('connect_serial').innerHTML = 'Connect <i class="fa fa-plug"></i>';
+			}
 
-			serial_details.push(p);
-			serial_details.push(baudRate);
+			else{
+				var p = document.querySelector('#serial_port').value;
+				var baudRate = document.querySelector('#baudRate').value;
+				var serial_details = [];
 
-			if (!p)
-				return false;
-			ipcRenderer.send('connect_serial', (event, serial_details));
-			
-			// removing the last selected serial port and baudRate
-			serial_details.pop();
-			serial_details.pop();
+				serial_details.push(p);
+				serial_details.push(baudRate);
 
-			document.getElementById('wifi1').innerHTML = '<button type="button" onclick="serialPassthrough()" class="btn btn-outline-secondary">Serial Passthrough  <i class="fa fa-angle-double-right"></i></button>';
+				if (!p)
+					return false;
+				ipcRenderer.send('connect_serial', (event, serial_details));
+				
+				// removing the last selected serial port and baudRate
+				serial_details.pop();
+				serial_details.pop();
+
+				document.getElementById('wifi1').innerHTML = '<button type="button" onclick="serialPassthrough()" class="btn btn-outline-secondary">Serial Passthrough  <i class="fa fa-angle-double-right"></i></button>';
+			}
 		}
 
 		// sending selected wifi
 		function connectWifi() {
-			// var wifi = document.querySelector('#wifi').value;
-			// var password = document.querySelector('#password').value;
+			if(status_wifi == true){
+				ipcRenderer.send('disconnect');
+				status_wifi = false;
+				console.log('dis');
+				document.getElementById('connect_wifi').innerHTML = 'Connect <i class="fa fa-plug"></i>';
+			}
 
-			var wifi = "$EZ_RTK";
-			var password = "1234567890";
+			else{
+				var wifi = "$EZ_RTK";
+				var password = "1234567890";
 
-			console.log(wifi + " " + password);
-			var wifi_details = [];
+				console.log(wifi + " " + password);
+				var wifi_details = [];
 
-			wifi_details.push(wifi);
-			wifi_details.push(password);
-			if (!wifi_details) 
-				return false;
-			ipcRenderer.send('connect_wifi', (event, wifi_details));
+				wifi_details.push(wifi);
+				wifi_details.push(password);
+				if (!wifi_details) 
+					return false;
+				ipcRenderer.send('connect_wifi', (event, wifi_details));
 
-			wifi_details.pop();
-			wifi_details.pop();
+				wifi_details.pop();
+				wifi_details.pop();
+			}
 		}
 
 		ipcRenderer.on('load:device', (event, ports) => {
 			let port_menu = document.querySelector('#serial_port');
 			port_menu.innerHTML = "";
-			for (var i=0;i<ports.length;i++) {
+
+			if(ports.length == 0){
 				const op = document.createElement('option');
-				op.innerHTML = ports[i];
-				op.value = ports[i];
+				op.innerHTML = "COM unavailable";
 				port_menu.appendChild(op);	
+			}
+
+			else{
+				for (var i=0;i<ports.length;i++) {
+					const op = document.createElement('option');
+					op.innerHTML = ports[i];
+					op.value = ports[i];
+					port_menu.appendChild(op);	
+				}
 			}
 		});
 
@@ -327,7 +376,7 @@
 		// 				'<button type="button" onclick="connectWifi()" class="btn btn-outline-secondary">Connect <i class="fa fa-plug"></i></button>'+
 		// 			'</div>';
 
-		var wifi = '<button type="button" onclick="connectWifi()" class="btn btn-outline-secondary">Connect <i class="fa fa-plug"></i></button>';
+		var wifi = '<button type="button" onclick="connectWifi()" id="connect_wifi" class="btn btn-outline-secondary">Connect <i class="fa fa-plug"></i></button>';
 						
 		var serial = '<div class="col-4"><select id="serial_port" class="form-control"></select></div>' +
 					'<div class="col-4"><select id="baudRate" class="form-control">'+
@@ -343,14 +392,22 @@
 				document.getElementById('Connect').innerHTML = "";
 				document.getElementById('wifi1').innerHTML = "";
 				ipcRenderer.send('conn:close');
+				status_wifi = false;
+				status_serial = false;
 			}
 			else if(conType == 1) {
 				document.getElementById('wifi1').innerHTML = wifi;
+				if(status_wifi == true){
+					document.getElementById('connect_wifi').innerHTML = 'Disconnect';
+				}
 				document.getElementById('Connect').innerHTML = "";
 				ipcRenderer.send('load:wifi');
 			} 
 			else {
 				document.getElementById('Connect').innerHTML = serial;
+				if(status_serial == true){
+					document.getElementById('connect_serial').innerHTML = 'Disconnect';
+				}
 				document.getElementById('wifi1').innerHTML = "";
 				ipcRenderer.send('load:device');
 			}

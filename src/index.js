@@ -49,6 +49,15 @@ ipcMain.on('load:wifi', (event)=>{
 	});
 });
 
+// Disconnect Wi-Fi connections
+ipcMain.on('disconnect', (event)=>{  
+	wifi.init({
+		iface: null // network interface, choose a random wifi interface if set to null
+	});
+	disconnect();
+});
+
+
 function showNotification (title, body) {
 	const notification = {
 		title: title,
@@ -58,7 +67,9 @@ function showNotification (title, body) {
 }
 
 function sendNmea(data) {
+	mainWindow.webContents.send('parse:nmea', data);
 	var x = data.split(",");
+	
 	if(mapWindow) {
 		var lat,lon,alt;
 		if(data[0]=="$") {
@@ -83,7 +94,6 @@ function sendNmea(data) {
 		console.log(coordinates);
 		mapWindow.webContents.send('live:feed', coordinates);
 	}
-	mainWindow.webContents.send('parse:nmea', data);
 }
 // uart
 const SerialPort = require('serialport');
@@ -116,14 +126,16 @@ function connectWifi(net_ssid, password) {
 		if (error) {
 			console.log("Could not connect to "+net_ssid+" "+error);
 			showNotification("Could not connect to "+net_ssid,error);
-			connType = 0;
+			
+			mainWindow.webContents.send('status:wifi',false);
 		}
 		else{
-			console.log('Connected to: ' + net_ssid);
-			showNotification('Connected to: ', net_ssid);
 			connType = 1;
+			mainWindow.webContents.send('status:wifi',true);
+			console.log('Connected to: ' + net_ssid+' Conntype = '+connType);
+			showNotification('Connected to: ', net_ssid);
 		}
-		console.log(connType);
+		// console.log('Wifi connected. conntype = '+connType);
 	});
 }
 
@@ -134,14 +146,15 @@ function disconnect() {
 				console.log(error);
 			} else {
 				connType = 0;
-				console.log('Disconnected');
-				showNotification('Disconnected','Wifi connection closed ');
+				console.log('Disconnected. Conntype = '+connType);
+				showNotification('Disconnected','Wifi connection closed');
 			}
 		});
 	}
 	if (connType == 2){
 		port.close(() => {
 			connType = 0;
+			console.log('Disconnected. Conntype = '+connType);
 			showNotification('Disconnected','Serial connection closed ')
 		});
 	}
@@ -167,6 +180,7 @@ function loadUart(comp, baudRate) {
 		connType = 2;
 		showNotification('Port opened with Baud Rate = '+baudRate);
 		console.log('Port opened with Baud Rate = '+baudRate);
+		mainWindow.webContents.send('status:serial',true);
 		console.log(connType);
 	});
 	
@@ -180,7 +194,7 @@ function loadUart(comp, baudRate) {
 			ch = 0;
 			connectWifi(read_ssid, read_password);
 		}
-		if(data == 'IP address: '){
+		if(data == 'IP Address: '){
 			ch = 1;
 		}
 		try{
@@ -458,6 +472,9 @@ ipcMain.on('connect_serial', (event, serial_details) => {
 });
 
 function NMEAStream(){
+	if(connType!=1){
+        clearInterval(timer);
+    }
 	axios.get(`http://${IPAddress}/livedata`)
 	.then(response => {
 		// showNotification('Command sent Via Wi-Fi');
@@ -478,9 +495,23 @@ ipcMain.on('connect_wifi', (event, wifi_details) => {
 		return false;
 	} else {
 		connectWifi(ssid,password);
-		if(connType == 1){
-			var timer = setInterval(NMEAStream, 2000);
-		}
+		var timer = setInterval(function(){
+			if(connType!=1){
+				clearInterval(timer);
+			}
+			else{
+				axios.get(`http://${IPAddress}/livedata`)
+				.then(response => {
+					// showNotification('Command sent Via Wi-Fi');
+					sendNmea(response.data);	
+					console.log('Response from EZRTK'+ response.data);
+				})
+				.catch(error => {
+					// showNotification('Response from EZRTK', 'Some error occured!!!');
+					// console.log(error);
+				});
+			}
+		}, 2000);
 	}
 });
 
@@ -517,6 +548,23 @@ function sendOverWifi(command) {
 			console.log('Response, IP = '+IPAddress);
 			if(response.data){
 				connectWifi(read_ssid, read_password);
+				var timer = setInterval(function(){
+					if(connType!=1){
+						clearInterval(timer);
+					}
+					else{
+						axios.get(`http://${IPAddress}/livedata`)
+						.then(response => {
+							// showNotification('Command sent Via Wi-Fi');
+							sendNmea(response.data);	
+							console.log('Response from EZRTK'+ response.data);
+						})
+						.catch(error => {
+							// showNotification('Response from EZRTK', 'Some error occured!!!');
+							// console.log(error);
+						});
+					}
+				}, 2000);
 			}
 		})
 		.catch(error => {
