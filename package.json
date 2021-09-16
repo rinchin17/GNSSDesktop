@@ -48,8 +48,10 @@
     "axios": "^0.21.1",
     "electron-squirrel-startup": "^1.0.0",
     "geolocation": "^0.2.0",
+    "gps": "^0.6.0",
     "http": "^0.0.1-security",
     "md5": "^2.3.0",
+    "nmea-simple": "^3.2.0",
     "node-wifi": "^2.0.14",
     "serialport": "^9.0.7"
   },

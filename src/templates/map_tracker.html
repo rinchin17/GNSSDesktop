@@ -38,7 +38,7 @@
 
 		<div class="row">
 			<div class="col">
-				<div id="map" class="bg-light">
+				<div id="map" class="bg-light map">
 					
 				</div>
 			</div>
@@ -110,16 +110,17 @@
 		ipcRenderer.on('live:feed', (event, coordinates) => {
 			if(isLive) {
 				if (!initialized) {
-					initMap(coordinates.Longitude, coordinates.Latitude);
+					initMap(coordinates.lon, coordinates.lat);
 					initialized = true;
 				} else {
 					var c = coordinates;
-					var latitude = c.Latitude;
-					var longitude = c.Longitude;
+					var latitude = c.lat;
+					var longitude = c.lon;
 					useMap(longitude, latitude);
 					document.getElementById("lat").value = latitude;
 					document.getElementById("lon").value = longitude;
-					document.getElementById("alt").value = c.Altitude;
+					document.getElementById("alt").value = c.alt;
+					document.getElementById("rtk").value = c.fix;
 				}
 			}
 		});

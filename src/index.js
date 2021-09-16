@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, Menu, dialog, Notification } = require('electron');
+const { app, BrowserWindow, ipcMain, Menu, dialog, Notification, globalShortcut } = require('electron');
 const axios = require('axios');
 const path = require('path');
 const fs = require('fs'); 
@@ -17,6 +17,19 @@ var IPAddress = hotSpotIP;
 var ch = 0;
 var rtkType = 0;
 var read_ssid,read_password;
+
+var GPS = require('gps');
+var gps = new GPS;
+
+var coordinates;
+
+gps.on('data', data => {
+	coordinates = gps.state;
+	console.log(coordinates);
+	mainWindow.webContents.send('parse:nmea', coordinates);
+	sendNmea();
+	//console.log(data, gps.state);
+});
 
 // load wifi
 ipcMain.on('load:wifi', (event)=>{  
@@ -67,30 +80,8 @@ function showNotification (title, body) {
 }
 
 function sendNmea(data) {
-	mainWindow.webContents.send('parse:nmea', data);
-	var x = data.split(",");
-	
+	gps.update(data);
 	if(mapWindow) {
-		var lat,lon,alt;
-		if(data[0]=="$") {
-			var x = data.split(",");
-			if(x[4]=="S") {
-				lat = '-' + x[3];
-			} else {
-				lat = x[3];
-			}
-			if(x[6]=="W") {
-				lon = "-" + x[5];
-			} else {
-				lon = x[5];
-			}
-			alt = x[9];
-		}
-		var coordinates = {
-			Latitude: lat,
-			Longitude: lon,
-			Altitude: alt
-		}
 		// console.log(coordinates);
 		mapWindow.webContents.send('live:feed', coordinates);
 	}
