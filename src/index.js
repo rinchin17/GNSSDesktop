@@ -91,7 +91,7 @@ function sendNmea(data) {
 			Longitude: lon,
 			Altitude: alt
 		}
-		console.log(coordinates);
+		// console.log(coordinates);
 		mapWindow.webContents.send('live:feed', coordinates);
 	}
 }
@@ -273,7 +273,12 @@ function openFile(){
 	}).then(result => {
 		const file = result.filePaths[0];
 		console.log(file);
-		const fileContent = fs.readFileSync(file).toString();
+		var fileContent = fs.readFileSync(file).toString();
+		// fileContent.replace((fileContent.length)-2, '');
+		if(fileContent[fileContent.length-1] === ']' && fileContent[fileContent.length-2] === ',') {
+			fileContent = fileContent.replace(",]","]");
+		}
+		fileContent = JSON.parse(fileContent);
 		mapWindow.webContents.send('read:file', fileContent);
 	}).catch(err => {
 		console.log(err)
@@ -384,11 +389,11 @@ ipcMain.on('open:map',(event) => {
 		},
 		title: 'Map Tracker',
 		width: 800,
-		height:580,
+		height: 600,
 		parent: mainWindow,
 		modal: true
 	});
-	mapWindow.maximize();
+	//mapWindow.maximize();
 	mapWindow.menuBarVisible = false;
 	mapWindow.loadFile(path.join(__dirname, `templates/map_tracker.html`));
 });
@@ -504,7 +509,7 @@ ipcMain.on('connect_wifi', (event, wifi_details) => {
 				.then(response => {
 					// showNotification('Command sent Via Wi-Fi');
 					sendNmea(response.data);	
-					console.log('Response from EZRTK'+ response.data);
+					// console.log('Response from EZRTK'+ response.data);
 				})
 				.catch(error => {
 					// showNotification('Response from EZRTK', 'Some error occured!!!');

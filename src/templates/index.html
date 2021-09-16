@@ -231,46 +231,45 @@
 
 		// receiving and parsing nmea file
 		ipcRenderer.on('parse:nmea', (event, sentence) => {
-			var split_list = sentence.split('\n');
+			console.log(sentence);
+			// var split_list = sentence.split('\n');
+			// // for(var i=0;i<split_list.length;i++){
+			// // 	const li = document.createElement('li');
+			// // 	const text = document.createTextNode(split_list[i]);
+			// // 	li.appendChild(text);
+			// // 	ul.appendChild(li);
+			// // }
 
-			// for(var i=0;i<split_list.length;i++){
-			// 	const li = document.createElement('li');
-			// 	const text = document.createTextNode(split_list[i]);
-			// 	li.appendChild(text);
-			// 	ul.appendChild(li);
-			// }
+            // const li = document.createElement('li');
+            // const text = document.createTextNode(sentence);
+            // li.appendChild(text);
+			// ul.appendChild(li);
 
-            const li = document.createElement('li');
-            const text = document.createTextNode(sentence);
-            li.appendChild(text);
-			ul.appendChild(li);
-
-			document.getElementById('feeds').scrollIntoView();
-
-			var nmea = sentence.split(",");
-			var time = nmea[1].substring(0,2) + ":" + nmea[1].substring(2,4) + ":" + nmea[1].substring(4,6);
-			var date = nmea[9].substring(0,2) + "/" + nmea[9].substring(2,4) + "/" + nmea[9].substring(4,6);
-			var speed = nmea[7] + " knots";
+			// document.getElementById('feeds').scrollIntoView();
+		
+			// var nmea = sentence.split(",");
+			// console.log(nmea);
+			// var time = nmea[1].substring(0,2) + ":" + nmea[1].substring(2,4) + ":" + nmea[1].substring(4,6);
+			// var date = nmea[9].substring(0,2) + "/" + nmea[9].substring(2,4) + "/" + nmea[9].substring(4,6);
+			// var speed = nmea[7] + " knots";
 		    
 
-		    var latDeg = parseInt(nmea[3].substring(0, 2));
-		    var latMin = nmea[3].substring(2);
-		    var lat = latDeg + (latMin/60);
-		    var latDirection = nmea[4];
+		    // var latDeg = parseInt(nmea[3].substring(0, 2));
+		    // var latMin = nmea[3].substring(2);
+		    // var lat = latDeg + (latMin/60);
+		    // var latDirection = nmea[4];
 
-		    var lngDeg = parseInt(nmea[5].substring(0, 3));
-		    var lngMin = nmea[5].substring(3);
-		    var lng = lngDeg + (lngMin/60);
-		    var lngDirection = nmea[6];
+		    // var lngDeg = parseInt(nmea[5].substring(0, 3));
+		    // var lngMin = nmea[5].substring(3);
+		    // var lng = lngDeg + (lngMin/60);
+		    // var lngDirection = nmea[6];
 
-		    document.querySelector('#latitude').value = lat.toString() + latDirection;
-			document.querySelector('#longitude').value = lng.toString() + lngDirection;
-			document.querySelector('#speed').value = speed;
-			document.querySelector('#time').value = time;
-			document.querySelector('#date').value = date;
-			document.querySelector('#an').innerHTML = sentence;
-
-			
+		    // document.querySelector('#latitude').value = lat.toString() + latDirection;
+			// document.querySelector('#longitude').value = lng.toString() + lngDirection;
+			// document.querySelector('#speed').value = speed;
+			// document.querySelector('#time').value = time;
+			// document.querySelector('#date').value = date;
+			// // document.querySelector('#an').innerHTML = sentence;		
 		});
 		
 		// sending selected port and baudRate
@@ -312,7 +311,7 @@
 			}
 
 			else{
-				var wifi = "$EZ_RTK";
+				var wifi = "$EZ_RTK_ROVER";
 				var password = "1234567890";
 
 				console.log(wifi + " " + password);
@@ -349,16 +348,16 @@
 			}
 		});
 
-		ipcRenderer.on('load:wifi', (event, wifi) => {
-			let wifi_menu = document.querySelector('#wifi');
-			wifi_menu.innerHTML = "";
-			for (var i=0;i<wifi.length;i++) {
-				const op = document.createElement('option');
-				op.innerHTML = wifi[i];
-				op.value = wifi[i];
-				wifi_menu.appendChild(op);	
-			}
-		});
+		// ipcRenderer.on('load:wifi', (event, wifi) => {
+		// 	let wifi_menu = document.querySelector('#wifi');
+		// 	wifi_menu.innerHTML = "<p></p>";
+		// 	for (var i=0;i<wifi.length;i++) {
+		// 		const op = document.createElement('option');
+		// 		op.innerHTML = wifi[i];
+		// 		op.value = wifi[i];
+		// 		wifi_menu.appendChild(op);	
+		// 	}
+		// });
 
 		function serialPassthrough(){
 			ipcRenderer.send('make:command','$EZ_RTK,GNSS-VIEWER,RTKCOMMAND');

@@ -98,3 +98,12 @@ input:checked + .slider:before {
 .slider.round:before {
   border-radius: 50%;
 }
+
+#map {
+	top: 0;
+	bottom: 0;
+	height: 85vh;
+  width: 100%;
+	/* background: grey; */
+}
+
