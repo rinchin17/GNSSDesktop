@@ -17,6 +17,7 @@ var IPAddress = hotSpotIP;
 var ch = 0;
 var rtkType = 0;
 var read_ssid,read_password;
+var nmea = "";
 
 var GPS = require('gps');
 var gps = new GPS;
@@ -25,7 +26,8 @@ var coordinates;
 
 gps.on('data', data => {
 	coordinates = gps.state;
-	console.log(coordinates);
+	coordinates.nmea = nmea;
+	//console.log(coordinates.nmea);
 	mainWindow.webContents.send('parse:nmea', coordinates);
 	sendNmea();
 	//console.log(data, gps.state);
@@ -189,6 +191,7 @@ function loadUart(comp, baudRate) {
 			ch = 1;
 		}
 		try{
+			nmea = data;
 			await sendNmea(data);
 		}
 		catch(err){
@@ -214,7 +217,7 @@ const createWindow = () => {
 			contextIsolation: false
 		},
 		title: 'EZRTK',
-		width: 900,
+		width: 1200,
 		height: 700,
 		resizable: false,
 		//frame: false,
@@ -427,14 +430,10 @@ ipcMain.on('read:credentials', (event, credentials) => {
 	}
 });
 
-
 // sending Server's IP to downloadWindow
 ipcMain.on('read:IP', (event) => {
 	downloadWindow.webContents.send('read:IP', IPAddress);
 });
-
-
-
 
 //send command
 ipcMain.on('make:command', (event, command) => {
@@ -582,7 +581,6 @@ function sendOverWifi(command) {
 		});
 	}
 }
-
 
 function sendOverUart(command) {
 	if(command.substring(0,8) == 'connect,'){
