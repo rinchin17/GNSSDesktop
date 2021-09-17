@@ -1,7 +1,7 @@
 const { app, BrowserWindow, ipcMain, Menu, dialog, Notification, globalShortcut } = require('electron');
 const axios = require('axios');
 const path = require('path');
-const fs = require('fs'); 
+const fs = require('fs');
 var md5 = require('md5');
 var wifi = require('node-wifi');
 
@@ -16,7 +16,7 @@ var hotSpotIP = "192.168.4.1";
 var IPAddress = hotSpotIP;
 var ch = 0;
 var rtkType = 0;
-var read_ssid,read_password;
+var read_ssid, read_password;
 var nmea = "";
 
 var GPS = require('gps');
@@ -29,43 +29,43 @@ gps.on('data', data => {
 	coordinates.nmea = nmea;
 	//console.log(coordinates.nmea);
 	mainWindow.webContents.send('parse:nmea', coordinates);
-	sendNmea();
+	//sendNmea();
 	//console.log(data, gps.state);
 });
 
 // load wifi
-ipcMain.on('load:wifi', (event)=>{  
+ipcMain.on('load:wifi', (event) => {
 	wifi.init({
 		iface: null // network interface, choose a random wifi interface if set to null
 	});
-  
-  // Scan networks
+
+	// Scan networks
 	wifi.scan((error, networks) => {
 		if (error) {
 			console.log(error);
-		} 
+		}
 		else {
 			available_wifi = [];
-			for(var i = 0; i<networks.length;i++){
+			for (var i = 0; i < networks.length; i++) {
 				available_wifi.push(networks[i].ssid);
 			}
-			mainWindow.webContents.send('load:wifi',available_wifi);
+			mainWindow.webContents.send('load:wifi', available_wifi);
 		}
 	});
-  
+
 	// All functions also return promise if there is no callback given
 	wifi
-	.scan()
-	.then(networks => {
-		// networks
-	})
-	.catch(error => {
-		console.log("Oops! "+error);
-	});
+		.scan()
+		.then(networks => {
+			// networks
+		})
+		.catch(error => {
+			console.log("Oops! " + error);
+		});
 });
 
 // Disconnect Wi-Fi connections
-ipcMain.on('disconnect', (event)=>{  
+ipcMain.on('disconnect', (event) => {
 	wifi.init({
 		iface: null // network interface, choose a random wifi interface if set to null
 	});
@@ -73,7 +73,7 @@ ipcMain.on('disconnect', (event)=>{
 });
 
 
-function showNotification (title, body) {
+function showNotification(title, body) {
 	const notification = {
 		title: title,
 		body: body
@@ -82,8 +82,12 @@ function showNotification (title, body) {
 }
 
 function sendNmea(data) {
-	gps.update(data);
-	if(mapWindow != null) {
+	try {
+		gps.update(data);
+	} catch (e) {
+
+	}
+	if (mapWindow != null) {
 		// console.log(coordinates);
 		mapWindow.webContents.send('live:feed', coordinates);
 	}
@@ -95,17 +99,17 @@ const Readline = require('@serialport/parser-readline');
 let port;
 
 // load devices
-ipcMain.on('load:device', (event)=>{
+ipcMain.on('load:device', (event) => {
 	let available_ports = [];
 	SerialPort.list().then(ports => {
-	ports.forEach(function(port) {
-		if(port.pnpId.substr(0,3) === 'USB') {
-			available_ports.push(port.path); 
-			console.log(port.pnpId.substr(0,3));
-		}
-	});
-	console.log(available_ports);
-	mainWindow.webContents.send('load:device', available_ports);
+		ports.forEach(function (port) {
+			if (port.pnpId.substr(0, 3) === 'USB') {
+				available_ports.push(port.path);
+				console.log(port.pnpId.substr(0, 3));
+			}
+		});
+		console.log(available_ports);
+		mainWindow.webContents.send('load:device', available_ports);
 	});
 });
 
@@ -117,15 +121,15 @@ function connectWifi(net_ssid, password) {
 	disconnect();
 	wifi.connect({ ssid: net_ssid, password: password }, error => {
 		if (error) {
-			console.log("Could not connect to "+net_ssid+" "+error);
-			showNotification("Could not connect to "+net_ssid,error);
-			
-			mainWindow.webContents.send('status:wifi',false);
+			console.log("Could not connect to " + net_ssid + " " + error);
+			showNotification("Could not connect to " + net_ssid, error);
+
+			mainWindow.webContents.send('status:wifi', false);
 		}
-		else{
+		else {
 			connType = 1;
-			mainWindow.webContents.send('status:wifi',true);
-			console.log('Connected to: ' + net_ssid+' Conntype = '+connType);
+			mainWindow.webContents.send('status:wifi', true);
+			console.log('Connected to: ' + net_ssid + ' Conntype = ' + connType);
 			showNotification('Connected to: ', net_ssid);
 		}
 		// console.log('Wifi connected. conntype = '+connType);
@@ -133,22 +137,22 @@ function connectWifi(net_ssid, password) {
 }
 
 function disconnect() {
-	if (connType == 1){
+	if (connType == 1) {
 		wifi.disconnect(error => {
 			if (error) {
 				console.log(error);
 			} else {
 				connType = 0;
-				console.log('Disconnected. Conntype = '+connType);
-				showNotification('Disconnected','Wifi connection closed');
+				console.log('Disconnected. Conntype = ' + connType);
+				showNotification('Disconnected', 'Wifi connection closed');
 			}
 		});
 	}
-	if (connType == 2){
+	if (connType == 2) {
 		port.close(() => {
 			connType = 0;
-			console.log('Disconnected. Conntype = '+connType);
-			showNotification('Disconnected','Serial connection closed ')
+			console.log('Disconnected. Conntype = ' + connType);
+			showNotification('Disconnected', 'Serial connection closed ')
 		});
 	}
 
@@ -168,36 +172,36 @@ function loadUart(comp, baudRate) {
 		flowControl: true,
 		usePromises: true,
 	});
-	
+
 	port.on("open", () => {
 		connType = 2;
-		showNotification('Port opened with Baud Rate = '+baudRate);
-		console.log('Port opened with Baud Rate = '+baudRate);
-		mainWindow.webContents.send('status:serial',true);
+		showNotification('Port opened with Baud Rate = ' + baudRate);
+		console.log('Port opened with Baud Rate = ' + baudRate);
+		mainWindow.webContents.send('status:serial', true);
 		console.log(connType);
 	});
-	
+
 	const parser = port.pipe(new Readline({ delimiter: '\r\n' }));
 
 	parser.on('data', async data => {
-		
-		if(ch==1){
+
+		if (ch == 1) {
 			IPAddress = data;
-			console.log("IP Address = "+IPAddress);
+			console.log("IP Address = " + IPAddress);
 			ch = 0;
 			connectWifi(read_ssid, read_password);
 		}
-		if(data == 'IP Address: '){
+		if (data == 'IP Address: ') {
 			ch = 1;
 		}
-		try{
+		try {
 			nmea = data;
 			await sendNmea(data);
 		}
-		catch(err){
+		catch (err) {
 			console.log(err);
 		}
-		
+
 		// $EZ_RTK|SET-WIFI|Rinchin|airbud17
 		// $EZ_RTK|SET-WIFI|$EZ_RTK|1234567890
 
@@ -224,7 +228,7 @@ const createWindow = () => {
 		transparent: true
 	});
 	mainWindow.menuBarVisible = false;
-	mainWindow.loadFile(path.join(__dirname, 'templates/index.html')); 
+	mainWindow.loadFile(path.join(__dirname, 'templates/index.html'));
 };
 
 app.on('ready', createWindow);
@@ -259,17 +263,17 @@ function newWindow(title, file, width, height, resizable) {
 }
 
 // for selecting a file to read
-function openFile(){
+function openFile() {
 	dialog.showOpenDialog(mapWindow, {
 		properties: ['openFile'],
-		filters: [{extensions: ['json']}]
+		filters: [{ extensions: ['json'] }]
 	}).then(result => {
 		const file = result.filePaths[0];
 		console.log(file);
 		var fileContent = fs.readFileSync(file).toString();
 		// fileContent.replace((fileContent.length)-2, '');
-		if(fileContent[fileContent.length-1] === ']' && fileContent[fileContent.length-2] === ',') {
-			fileContent = fileContent.replace(",]","]");
+		if (fileContent[fileContent.length - 1] === ']' && fileContent[fileContent.length - 2] === ',') {
+			fileContent = fileContent.replace(",]", "]");
 		}
 		fileContent = JSON.parse(fileContent);
 		mapWindow.webContents.send('read:file', fileContent);
@@ -279,7 +283,7 @@ function openFile(){
 }
 
 
-if(!String.prototype.startsWith){
+if (!String.prototype.startsWith) {
 	String.prototype.startsWith = function (str) {
 		return !this.indexOf(str);
 	}
@@ -289,26 +293,26 @@ function parse(sentence) {
 	console.log(sentence);
 	mainWindow.webContents.on('did-finish-load', function () {
 		mainWindow.webContents.send('parse:nmea', "jasdfh");
-	});  
+	});
 }
 
 function readTextFile(input, parse) {
 	var remaining = '';
 
-	input.on('data', function(data) {
+	input.on('data', function (data) {
 		remaining += data;
 		var index = remaining.indexOf('\n');
 		while (index > -1) {
 			var line = remaining.substring(0, index);
 			remaining = remaining.substring(index + 1);
-			if(line.startsWith("$GPRMC")) {
+			if (line.startsWith("$GPRMC")) {
 				parse(line);
 			}
 			index = remaining.indexOf('\n');
 		}
 	});
 
-	input.on('end', function() {
+	input.on('end', function () {
 		if (remaining.length > 0 && remaining.startsWith("$GPRMC")) {
 			parse(remaining);
 		}
@@ -316,7 +320,7 @@ function readTextFile(input, parse) {
 }
 
 //device setup window
-ipcMain.on('device:setup',(event) => {
+ipcMain.on('device:setup', (event) => {
 	deviceSetupWindow = new BrowserWindow({
 		webPreferences: {
 			nodeIntegration: true,
@@ -324,17 +328,17 @@ ipcMain.on('device:setup',(event) => {
 		},
 		title: 'Device Setup',
 		width: 600,
-		height:450,
+		height: 450,
 		parent: mainWindow,
 		modal: true
 	});
-	
+
 	deviceSetupWindow.menuBarVisible = false;
 	deviceSetupWindow.loadFile(path.join(__dirname, `templates/device_setup.html`));
 });
 
 //download window
-ipcMain.on('open:download',(event) => {
+ipcMain.on('open:download', (event) => {
 	downloadWindow = new BrowserWindow({
 		webPreferences: {
 			nodeIntegration: true,
@@ -342,18 +346,18 @@ ipcMain.on('open:download',(event) => {
 		},
 		title: 'Download Data',
 		width: 800,
-		height:580,
+		height: 580,
 		parent: mainWindow,
 		modal: true
 	});
-	
+
 	downloadWindow.menuBarVisible = false;
 	downloadWindow.loadFile(path.join(__dirname, `templates/data_download.html`));
-	
+
 });
 
 //settings window
-ipcMain.on('open:settings',(event) => {
+ipcMain.on('open:settings', (event) => {
 	file = 'settings.html';
 	title = 'Settings';
 
@@ -361,7 +365,7 @@ ipcMain.on('open:settings',(event) => {
 });
 
 // dev tools window
-ipcMain.on('open:devtools',(event) => {
+ipcMain.on('open:devtools', (event) => {
 	file = 'devtools.html';
 	title = 'Dev Tools';
 
@@ -374,7 +378,7 @@ ipcMain.on('show:browse', (event) => {
 });
 
 //map window
-ipcMain.on('open:map',(event) => {  
+ipcMain.on('open:map', (event) => {
 	mapWindow = new BrowserWindow({
 		webPreferences: {
 			nodeIntegration: true,
@@ -391,7 +395,7 @@ ipcMain.on('open:map',(event) => {
 	mapWindow.loadFile(path.join(__dirname, `templates/map_tracker.html`));
 	mapWindow.on('closed', _ => {
 		mapWindow = null;
-	  });
+	});
 });
 
 //file browse window
@@ -399,7 +403,7 @@ ipcMain.on('browse:logs', (event) => {
 	dialog.showOpenDialog({
 		properties: ['openFile', 'multiSelections']
 	}, (files, err) => {
-		if(files) console.log(files);
+		if (files) console.log(files);
 		else console.log(err);
 	});
 });
@@ -409,14 +413,14 @@ ipcMain.on('read:rtkType', (event, rtk) => {
 	deviceSetupWindow.webContents.send('read:rtkType', rtkType);
 	rtkType = rtk;
 	// setting the state of App
-	if(rtkType == 0){
+	if (rtkType == 0) {
 		IPAddress = hotSpotIP;
 	}
 });
 
 // sending the state of App, either Hotspot mode or Wi-FI mode
 ipcMain.on('read:IPDevTools', (event, ip) => {
-	if(rtkType != 0){
+	if (rtkType != 0) {
 		IPAddress = ip;
 	}
 });
@@ -427,7 +431,7 @@ ipcMain.on('read:credentials', (event, credentials) => {
 	read_ssid = credentials.ssid;
 	read_password = credentials.password;
 
-	if(read_ssid == "$EZ_RTK" && read_password == "1234567890"){
+	if (read_ssid == "$EZ_RTK" && read_password == "1234567890") {
 		connectWifi(read_ssid, read_password);
 	}
 });
@@ -440,19 +444,19 @@ ipcMain.on('read:IP', (event) => {
 //send command
 ipcMain.on('make:command', (event, command) => {
 	// command = command + md5(command);
-	console.log('make got command: '+command+" conntype: "+connType);
+	console.log('make got command: ' + command + " conntype: " + connType);
 	if (command.length <= 0) {
 		showNotification('Command Error!', "Empty string");
 		console.log('empty command');
 	}
 
-	else{
+	else {
 		//send command over UART
-		if(connType == 2)
+		if (connType == 2)
 			sendOverUart(command);
 
 		//send command over Wi-Fi
-		else if(connType == 1)
+		else if (connType == 1)
 			sendOverWifi(command);
 	}
 });
@@ -461,52 +465,57 @@ ipcMain.on('make:command', (event, command) => {
 ipcMain.on('connect_serial', (event, serial_details) => {
 	comp = serial_details[0];
 	baudRate = serial_details[1];
-	if(!serial_details) {
+	if (!serial_details) {
 		return false;
 	} else {
-		loadUart(comp, baudRate);    
+		loadUart(comp, baudRate);
 	}
 });
 
-function NMEAStream(){
-	if(connType!=1){
-        clearInterval(timer);
-    }
+function NMEAStream() {
+	if (connType != 1) {
+		clearInterval(timer);
+	}
 	axios.get(`http://${IPAddress}/livedata`)
-	.then(response => {
-		// showNotification('Command sent Via Wi-Fi');
-		sendNmea(response.data);	
-		console.log('Response from EZRTK'+ response.data);
-	})
-	.catch(error => {
-		// showNotification('Response from EZRTK', 'Some error occured!!!');
-		// console.log(error);
-	});
+		.then(response => {
+			// showNotification('Command sent Via Wi-Fi');
+			sendNmea(response.data);
+			console.log('Response from EZRTK' + response.data);
+		})
+		.catch(error => {
+			// showNotification('Response from EZRTK', 'Some error occured!!!');
+			// console.log(error);
+		});
 }
 
 // connecting wifi
 ipcMain.on('connect_wifi', (event, wifi_details) => {
 	var ssid = wifi_details[0];
 	var password = wifi_details[1];
-	if(!wifi_details) {
+	if (!wifi_details) {
 		return false;
 	} else {
-		connectWifi(ssid,password);
-		var timer = setInterval(function(){
-			if(connType!=1){
+		connectWifi(ssid, password);
+		var timer = setInterval(function () {
+			if (connType != 1) {
 				clearInterval(timer);
 			}
-			else{
+			else {
 				axios.get(`http://${IPAddress}/livedata`)
-				.then(response => {
-					// showNotification('Command sent Via Wi-Fi');
-					sendNmea(response.data);	
-					// console.log('Response from EZRTK'+ response.data);
-				})
-				.catch(error => {
-					// showNotification('Response from EZRTK', 'Some error occured!!!');
-					// console.log(error);
-				});
+					.then(response => {
+						// showNotification('Command sent Via Wi-Fi');
+						var c = response.data.toString().split("\r\n");
+						for (var x of c) {
+							nmea = x;
+							sendNmea(x);
+						}
+
+						console.log('Response from EZRTK' + response.data);
+					})
+					.catch(error => {
+						// showNotification('Response from EZRTK', 'Some error occured!!!');
+						// console.log(error);
+					});
 			}
 		}, 2000);
 	}
@@ -533,63 +542,63 @@ ipcMain.on('uart:status', (event) => {
 });
 
 function sendOverWifi(command) {
-	
-	if(command.substring(0,8) == 'connect,'){
-		var sub_command = command.substring(8,command.length);
+
+	if (command.substring(0, 8) == 'connect,') {
+		var sub_command = command.substring(8, command.length);
 		axios.get(`http://${IPAddress}/connect/${sub_command}`)
-		.then(response => {
-			// showNotification('Command sent Via Wi-Fi');
-			// showNotification('Response from EZRTK', response.data);
-			console.log('Command sent Via Wi-Fi: '+sub_command);
-			IPAddress = response.data;
-			console.log('Response, IP = '+IPAddress);
-			if(response.data){
-				connectWifi(read_ssid, read_password);
-				var timer = setInterval(function(){
-					if(connType!=1){
-						clearInterval(timer);
-					}
-					else{
-						axios.get(`http://${IPAddress}/livedata`)
-						.then(response => {
-							// showNotification('Command sent Via Wi-Fi');
-							sendNmea(response.data);	
-							console.log('Response from EZRTK'+ response.data);
-						})
-						.catch(error => {
-							// showNotification('Response from EZRTK', 'Some error occured!!!');
-							// console.log(error);
-						});
-					}
-				}, 2000);
-			}
-		})
-		.catch(error => {
-			showNotification('Response from EZRTK', 'Some error occured!!!');
-			console.log(error);
-		});
+			.then(response => {
+				// showNotification('Command sent Via Wi-Fi');
+				// showNotification('Response from EZRTK', response.data);
+				console.log('Command sent Via Wi-Fi: ' + sub_command);
+				IPAddress = response.data;
+				console.log('Response, IP = ' + IPAddress);
+				if (response.data) {
+					connectWifi(read_ssid, read_password);
+					var timer = setInterval(function () {
+						if (connType != 1) {
+							clearInterval(timer);
+						}
+						else {
+							axios.get(`http://${IPAddress}/livedata`)
+								.then(response => {
+									// showNotification('Command sent Via Wi-Fi');
+									sendNmea(response.data);
+									console.log('Response from EZRTK' + response.data);
+								})
+								.catch(error => {
+									// showNotification('Response from EZRTK', 'Some error occured!!!');
+									// console.log(error);
+								});
+						}
+					}, 2000);
+				}
+			})
+			.catch(error => {
+				showNotification('Response from EZRTK', 'Some error occured!!!');
+				console.log(error);
+			});
 	}
-	else{
+	else {
 		axios.get(`http://${IPAddress}/command/${command}`)
-		.then(response => {
-			// showNotification('Command sent Via Wi-Fi');
-			// showNotification('Response from EZRTK', response.data);
-			console.log('Command sent Via Wi-Fi: '+command);
-			console.log('Response from EZRTK: '+response.data);
-		})
-		.catch(error => {
-			showNotification('Response from EZRTK', 'Some error occured!!!');
-			console.log(error);
-		});
+			.then(response => {
+				// showNotification('Command sent Via Wi-Fi');
+				// showNotification('Response from EZRTK', response.data);
+				console.log('Command sent Via Wi-Fi: ' + command);
+				console.log('Response from EZRTK: ' + response.data);
+			})
+			.catch(error => {
+				showNotification('Response from EZRTK', 'Some error occured!!!');
+				console.log(error);
+			});
 	}
 }
 
 function sendOverUart(command) {
-	if(command.substring(0,8) == 'connect,'){
-		command = command.substring(8,command.length);
+	if (command.substring(0, 8) == 'connect,') {
+		command = command.substring(8, command.length);
 	}
 	port.write(command, (err) => {
-		if(!err) {
+		if (!err) {
 			showNotification('Command sent Via UART : ', command);
 			console.log('Command sent Via UART: ', command);
 		} else {
