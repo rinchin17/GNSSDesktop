@@ -251,23 +251,25 @@
 
 		// receiving and parsing nmea file
 		ipcRenderer.on('parse:nmea', (event, sentence) => {
-			const li = document.createElement('li');
-			const text = document.createTextNode(sentence.nmea);
-			li.appendChild(text);
-			ul.appendChild(li);
-
+			//console.log(sentence.nmea);
 			document.querySelector('#latitude').value = sentence.lat;
 			document.querySelector('#longitude').value = sentence.lon;
 			document.querySelector('#speed').value = sentence.speed;
 			document.querySelector('#hdop').value = sentence.hdop;
 			document.querySelector('#rtkStatus').value = sentence.fix;
-			var t = sentence.time.toString().split(" ");
-			console.log(t);
-			var time = t[4]+ ' '+t[5];
-			var date = t[2]+'-'+t[1]+'-'+t[3];
-			document.querySelector('#time').value = time;
-			document.querySelector('#date').value = date;
-			ul.scrollIntoView({behavior: "smooth", block: "end"});
+			const li = document.createElement('li');
+			const text = document.createTextNode(sentence.nmea);
+			li.appendChild(text);
+			ul.appendChild(li);
+			ul.scrollIntoView({ behavior: "smooth", block: "end" });
+			try {
+				var t = sentence.time.toString().split(" ");
+				//console.log(t);
+				var time = t[4] + ' ' + t[5];
+				var date = t[2] + '-' + t[1] + '-' + t[3];
+				document.querySelector('#time').value = time;
+				document.querySelector('#date').value = date;
+			} catch (e) { }
 		});
 
 		// sending selected port and baudRate
