@@ -83,7 +83,7 @@ function showNotification (title, body) {
 
 function sendNmea(data) {
 	gps.update(data);
-	if(mapWindow) {
+	if(mapWindow != null) {
 		// console.log(coordinates);
 		mapWindow.webContents.send('live:feed', coordinates);
 	}
@@ -208,7 +208,6 @@ function loadUart(comp, baudRate) {
 if (require('electron-squirrel-startup')) {
 	app.quit();
 }
-
 
 const createWindow = () => {
 	mainWindow = new BrowserWindow({
@@ -390,6 +389,9 @@ ipcMain.on('open:map',(event) => {
 	//mapWindow.maximize();
 	mapWindow.menuBarVisible = false;
 	mapWindow.loadFile(path.join(__dirname, `templates/map_tracker.html`));
+	mapWindow.on('closed', _ => {
+		mapWindow = null;
+	  });
 });
 
 //file browse window
