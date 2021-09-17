@@ -100,9 +100,9 @@ input:checked + .slider:before {
 }
 
 .map {
-	top: 0;
+	top: 10;
 	bottom: 0;
-	height: 85vh;
+	height: 80vh;
   width: 100%;
 	/* background: grey; */
 }

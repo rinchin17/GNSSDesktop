@@ -1,18 +1,21 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
 
-	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" integrity="sha384-B0vP5xmATw1+K9KRQjQERJvTumQW0nPEzvF6L/Z6nronJ3oUOFUFpCjEUQouq2+l" crossorigin="anonymous">
+<head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+	<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css"
+		integrity="sha384-B0vP5xmATw1+K9KRQjQERJvTumQW0nPEzvF6L/Z6nronJ3oUOFUFpCjEUQouq2+l" crossorigin="anonymous">
 	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
 	<link rel="stylesheet" href="./css/index.css">
 	<link rel="stylesheet" href="./OpenLayers/theme/default/style.css">
 	<script src="./OpenLayers/OpenLayers.js"></script>
-  </head>
-  <body>
-  
-    <div class="container-fluid">
+</head>
+
+<body>
+
+	<div class="container-fluid">
 		<div class="row text-center mt-3">
 			<div class="col-12 col-sm-3">
 				<h4 class="">
@@ -26,74 +29,76 @@
 				<div class="custom-control custom-switch custom-switch-lg pt-2">
 					<input type="checkbox" class="custom-control-input" id="viewMode">
 					<label class="custom-control-label" for="viewMode">Live View</label>
-		        </div>
+				</div>
 			</div>
 		</div>
 
-        <div class="dropdown-divider"></div>
+		<div class="dropdown-divider"></div>
 
-		<div class="row" id="coordinates">
-			
+		<div class="row mb-2" id="coordinates">
+
 		</div>
 
 		<div class="row">
 			<div class="col">
 				<div id="map" class="bg-light map">
-					
+
 				</div>
 			</div>
-
 		</div>
-    </div>
+	</div>
 	<script>
 		const fs = require('fs');
 		const { ipcRenderer } = require('electron');
-		
+
 		var path = "";
 		var initialized = false;
 		var isLive = false;
 
 		var map, marker;
 
-		var coordinates = '<div class="col"><input type="text" class="form-control" placeholder="Latitude" id="lat" disabled></div>'+
-						'<div class="col"><input type="text" class="form-control" placeholder="Longitude" id="lon" disabled></div>'+
-						'<div class="col"><input type="text" class="form-control" placeholder="Altitude" id="alt" disabled></div>'+
-						'<div class="col"><input type="text" class="form-control" placeholder="RTK Status" id="rtk" disabled></div>';
-		
+		var coordinates = '<div class="col"><small id="latitudeHelpBlock" class="form-text text-muted">Latitude</small><div class="input-group mb-2"><div class="input-group-prepend"><div class="input-group-text"><span class="fa fa-arrow-up"></span></div></div><input type="text" class="form-control" id="lat" placeholder="Latitude" aria-describedby="latitudeHelpBlock" disabled></div></div>' +
+			'<div class="col"><small id="longitudeHelpBlock" class="form-text text-muted">Longitude</small><div class="input-group mb-2"><div class="input-group-prepend"><div class="input-group-text"><span class="fa fa-arrow-right"></span></div></div><input type="text" class="form-control" id="lon" placeholder="Longitude" aria-describedby="longitudeHelpBlock" disabled></div></div>' +
+			'<div class="col"><small id="altitudeHelpBlock" class="form-text text-muted">Altitude</small><div class="input-group mb-2"><div class="input-group-prepend"><div class="input-group-text"><span class="fa fa-arrow-up"></span></div></div><input type="text" class="form-control" id="alt" placeholder="Altitude" aria-describedby="altitudeHelpBlock" disabled></div></div>' +
+			'<div class="col"><small id="rtkHelpBlock" class="form-text text-muted">RTK status</small><div class="input-group mb-2"><div class="input-group-prepend"><div class="input-group-text"><span class="fa fa-arrow-up"></span></div></div><input type="text" class="form-control" id="rtk" placeholder="RTK status" aria-describedby="rtkHelpBlock" disabled></div></div>';
+
 		var mode = document.querySelector('#viewMode');
 		mode.addEventListener('change', (event) => {
 			if (mode.checked) {
 				ipcRenderer.send('uart:status');
 				initialized = false;
+				map = null;
+				document.querySelector('#map').innerHTML = "";
 			} else {
+				location.reload();
 				isLive = false;
 				map = null;
 				marker = null;
 				document.querySelector('#coordinates').innerHTML = "";
 			}
 		});
-		
+
 		document.querySelector('#choose').addEventListener('click', (event) => {
 			ipcRenderer.send('show:browse');
 		});
-		
+
 		function showBrowse() {
 			ipcRenderer.send('show:browse');
 		}
-		
+
 		ipcRenderer.on('read:file', (event, data) => {
 			initMap(data[0].Longitude, data[0].Latitude);
-			for (var i = 0; i < data.length; i++){
+			for (var i = 0; i < data.length; i++) {
 				useMap(data[i].Longitude, data[i].Latitude);
 			}
 			map = null;
 			marker = null;
 			// var popup = new OpenLayers.Popup.FramedCloud("Popup", 
-				// 	new OpenLayers.LonLat(data[i].Longitude, data[i].Latitude).transform( fromProjection, toProjection), null,
-				// 	'', null,
-				// 	true // <-- true if we want a close (X) button, false otherwise
-				// );
-				// map.addPopup(popup);
+			// 	new OpenLayers.LonLat(data[i].Longitude, data[i].Latitude).transform( fromProjection, toProjection), null,
+			// 	'', null,
+			// 	true // <-- true if we want a close (X) button, false otherwise
+			// );
+			// map.addPopup(popup);
 		});
 
 		ipcRenderer.on('uart:status', (event, permission) => {
@@ -108,7 +113,7 @@
 		});
 
 		ipcRenderer.on('live:feed', (event, coordinates) => {
-			if(isLive) {
+			if (isLive) {
 				if (!initialized) {
 					initMap(coordinates.lon, coordinates.lat);
 					initialized = true;
@@ -124,31 +129,32 @@
 				}
 			}
 		});
-		
+
 		//Map variables
-		const mapnik         = new OpenLayers.Layer.OSM();
-		const markers = new OpenLayers.Layer.Markers( "Markers" );
+		const mapnik = new OpenLayers.Layer.OSM();
+		const markers = new OpenLayers.Layer.Markers("Markers");
 		const fromProjection = new OpenLayers.Projection("EPSG:4326");
-		const toProjection   = new OpenLayers.Projection("EPSG:900913");
-		const zoom           = 10; //
+		const toProjection = new OpenLayers.Projection("EPSG:900913");
+		const zoom = 10; //
 
 		function initMap(longitude, latitude) {
 			var map = new OpenLayers.Map("map");
-			var position = new OpenLayers.LonLat(longitude, latitude).transform( fromProjection, toProjection);
+			var position = new OpenLayers.LonLat(longitude, latitude).transform(fromProjection, toProjection);
 			map.addLayer(mapnik);
-    		map.addLayer(markers);
-			map.setCenter(position, zoom );
+			map.addLayer(markers);
+			map.setCenter(position, zoom);
 		}
 
 		function useMap(longitude, latitude) {
-			var position = new OpenLayers.LonLat(longitude, latitude).transform( fromProjection, toProjection);
+			var position = new OpenLayers.LonLat(longitude, latitude).transform(fromProjection, toProjection);
 			markers.addMarker(new OpenLayers.Marker(position));
 			position = null;
 		}
 
-		if(path)
+		if (path)
 			useMap();
 	</script>
-    <!-- <script type="text/javascript" src='./js/demo.js'></script> -->
-  </body>
+	<!-- <script type="text/javascript" src='./js/demo.js'></script> -->
+</body>
+
 </html>
