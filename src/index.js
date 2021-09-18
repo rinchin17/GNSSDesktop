@@ -18,6 +18,9 @@ var ch = 0;
 var rtkType = 0;
 var read_ssid, read_password;
 var nmea = "";
+var logMode = false;
+var logs = [];
+var filename = null;
 
 var GPS = require('gps');
 var gps = new GPS;
@@ -26,10 +29,15 @@ var coordinates;
 
 gps.on('data', data => {
 	coordinates = gps.state;
+	if (logMode) {
+		logs.push(coordinates);
+	}
 	coordinates.nmea = nmea;
-	//console.log(coordinates.nmea);
+	if (mapWindow != null) {
+		// console.log(coordinates);
+		mapWindow.webContents.send('live:feed', coordinates);
+	}
 	mainWindow.webContents.send('parse:nmea', coordinates);
-	//sendNmea();
 	//console.log(data, gps.state);
 });
 
@@ -72,7 +80,6 @@ ipcMain.on('disconnect', (event) => {
 	disconnect();
 });
 
-
 function showNotification(title, body) {
 	const notification = {
 		title: title,
@@ -84,13 +91,7 @@ function showNotification(title, body) {
 function sendNmea(data) {
 	try {
 		gps.update(data);
-	} catch (e) {
-
-	}
-	if (mapWindow != null) {
-		// console.log(coordinates);
-		mapWindow.webContents.send('live:feed', coordinates);
-	}
+	} catch (e) { }
 }
 // uart
 const SerialPort = require('serialport');
@@ -408,6 +409,35 @@ ipcMain.on('browse:logs', (event) => {
 	});
 });
 
+//live feed log
+ipcMain.on('feed:log', (event, log) => {
+	if (log) {
+		var dt = Date().split(" ");
+		filename = `EZ_RTK_${dt[2]}_${dt[1]}_${dt[3]}_${dt[4]}.json`;
+		fs.open(filename, 'w', function (err, file) {
+			if (err) {
+				const messageBoxOptions = {
+					type: "error",
+					title: "Unable to log",
+					message: "Could not generate log file"
+				};
+				dialog.showMessageBox(messageBoxOptions);
+				logMode = false;
+				//mapWindow.webContents.send('uart:status', false);
+				throw err;
+			};
+			logMode = true;
+			console.log('Saved!');
+		});
+	} else {
+		logMode = false;
+		fs.writeFile(filename, logs, function (err) {
+			if (err) throw err;
+			console.log('Saved!');
+		});
+	}
+});
+
 // sending the state of App, either Hotspot mode or Wi-FI mode
 ipcMain.on('read:rtkType', (event, rtk) => {
 	deviceSetupWindow.webContents.send('read:rtkType', rtkType);
@@ -535,9 +565,13 @@ ipcMain.on('uart:status', (event) => {
 			message: "Please connect to serial or wifi channel to view live feed"
 		};
 		dialog.showMessageBox(messageBoxOptions);
-		mapWindow.webContents.send('uart:status', false);
+		mainWindow.webContents.send('uart:status', (event, false));
+		if (mapWindow != null)
+			mapWindow.webContents.send('uart:status', false);
 	} else {
-		mapWindow.webContents.send('uart:status', true);
+		mainWindow.webContents.send('uart:status', true);
+		if (mapWindow != null)
+			mapWindow.webContents.send('uart:status', true);
 	}
 });
 

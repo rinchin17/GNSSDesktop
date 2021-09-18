@@ -30,10 +30,10 @@
 			<div class="col-9 mt-3 pt-2">
 
 				<div class="row" id="div_comm_type">
-					<div class="col-4">
+					<div class="col-2">
 						Connection Type
 					</div>
-					<div class="col-4">
+					<div class="col-2">
 						<select id="comm_type" class="form-control" onchange="connChange()">
 							<option value="0"> --- None --- </option>
 							<option value="1">Wireless</option>
@@ -41,8 +41,14 @@
 						</select>
 					</div>
 
-					<div class="col-4" id="wifi1">
+					<div class="col-2" id="wifi1">
 
+					</div>
+					<div class="col">
+						<div class="custom-control custom-switch custom-switch-lg pt-2">
+							<input type="checkbox" class="custom-control-input" id="logMode">
+							<label class="custom-control-label" for="logMode">Live Logging</label>
+						</div>
 					</div>
 				</div>
 
@@ -187,10 +193,6 @@
 
 	<script>
 		const { ipcRenderer } = require('electron');
-		var GPS = require('gps');
-		var gps = new GPS;
-		//const nmea = require("nmea-simple");
-
 		var status_wifi = false;
 		var status_serial = false;
 
@@ -213,9 +215,26 @@
 		document.querySelector('#settings').addEventListener('click', (event) => {
 			ipcRenderer.send('open:settings');
 		});
-
 		document.querySelector('#devtools').addEventListener('click', (event) => {
 			ipcRenderer.send('open:devtools');
+		});
+
+		//Live Logging
+		var logSwitch = document.querySelector('#logMode');
+		logSwitch.addEventListener('change', (event) => {
+			if (logSwitch.checked) {
+				ipcRenderer.send('uart:status');
+			} else {
+				ipcRenderer.send('feed:log',(event, false));
+			}
+		});
+
+		ipcRenderer.on('uart:status', (event, permission) => {
+			if (permission) {
+				ipcRenderer.send('feed:log',(event, logSwitch.value));
+			} else {
+				logSwitch.checked = permission;
+			}
 		});
 
 		//Device setup
