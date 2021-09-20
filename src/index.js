@@ -4,7 +4,6 @@ const path = require('path');
 const fs = require('fs');
 var md5 = require('md5');
 var wifi = require('node-wifi');
-
 // static declarations
 var connType = 0;
 let mainWindow;
@@ -21,10 +20,8 @@ var nmea = "";
 var logMode = false;
 var logs = [];
 var filename = null;
-
 var GPS = require('gps');
 var gps = new GPS;
-
 var coordinates;
 
 gps.on('data', data => {
@@ -40,7 +37,6 @@ gps.on('data', data => {
 	mainWindow.webContents.send('parse:nmea', coordinates);
 	//console.log(data, gps.state);
 });
-
 // load wifi
 ipcMain.on('load:wifi', (event) => {
 	wifi.init({
@@ -71,7 +67,6 @@ ipcMain.on('load:wifi', (event) => {
 			console.log("Oops! " + error);
 		});
 });
-
 // Disconnect Wi-Fi connections
 ipcMain.on('disconnect', (event) => {
 	wifi.init({
@@ -79,7 +74,6 @@ ipcMain.on('disconnect', (event) => {
 	});
 	disconnect();
 });
-
 function showNotification(title, body) {
 	const notification = {
 		title: title,
@@ -87,7 +81,6 @@ function showNotification(title, body) {
 	}
 	new Notification(notification).show()
 }
-
 function sendNmea(data) {
 	try {
 		gps.update(data);
@@ -96,9 +89,7 @@ function sendNmea(data) {
 // uart
 const SerialPort = require('serialport');
 const Readline = require('@serialport/parser-readline');
-
 let port;
-
 // load devices
 ipcMain.on('load:device', (event) => {
 	let available_ports = [];
@@ -113,7 +104,6 @@ ipcMain.on('load:device', (event) => {
 		mainWindow.webContents.send('load:device', available_ports);
 	});
 });
-
 // connecting to network via WiFi
 function connectWifi(net_ssid, password) {
 	wifi.init({
@@ -136,7 +126,6 @@ function connectWifi(net_ssid, password) {
 		// console.log('Wifi connected. conntype = '+connType);
 	});
 }
-
 function disconnect() {
 	if (connType == 1) {
 		wifi.disconnect(error => {
@@ -159,7 +148,6 @@ function disconnect() {
 
 	console.log(connType);
 }
-
 // opening the UART channel
 function loadUart(comp, baudRate) {
 	disconnect();
@@ -208,12 +196,10 @@ function loadUart(comp, baudRate) {
 
 	});
 }
-
 // uart
 if (require('electron-squirrel-startup')) {
 	app.quit();
 }
-
 const createWindow = () => {
 	mainWindow = new BrowserWindow({
 		webPreferences: {
@@ -231,21 +217,17 @@ const createWindow = () => {
 	mainWindow.menuBarVisible = false;
 	mainWindow.loadFile(path.join(__dirname, 'templates/index.html'));
 };
-
 app.on('ready', createWindow);
-
 app.on('window-all-closed', () => {
 	if (process.platform !== 'darwin') {
 		app.quit();
 	}
 });
-
 app.on('activate', () => {
 	if (BrowserWindow.getAllWindows().length === 0) {
 		createWindow();
 	}
 });
-
 function newWindow(title, file, width, height, resizable) {
 	childWindow = new BrowserWindow({
 		webPreferences: {
@@ -262,41 +244,46 @@ function newWindow(title, file, width, height, resizable) {
 	childWindow.menuBarVisible = false;
 	childWindow.loadFile(path.join(__dirname, `templates/${file}`));
 }
-
 // for selecting a file to read
 function openFile() {
 	dialog.showOpenDialog(mapWindow, {
 		properties: ['openFile'],
 		filters: [{ extensions: ['json'] }]
 	}).then(result => {
-		const file = result.filePaths[0];
-		console.log(file);
-		var fileContent = fs.readFileSync(file).toString();
-		// fileContent.replace((fileContent.length)-2, '');
-		if (fileContent[fileContent.length - 1] === ']' && fileContent[fileContent.length - 2] === ',') {
-			fileContent = fileContent.replace(",]", "]");
+		try {
+			const file = result.filePaths[0];
+			console.log(file);
+			var fileContent = fs.readFileSync(file).toString();
+			fileContent = JSON.parse(fileContent);
+			mapWindow.webContents.send('read:file', fileContent);
+		} catch(e) {
+			const messageBoxOptions = {
+				type: "error",
+				title: `Cannot open file`,
+				message: `File ${file} may have been altered from source. Please re-download file.`
+			};
+			dialog.showMessageBox(messageBoxOptions);
 		}
-		fileContent = JSON.parse(fileContent);
-		mapWindow.webContents.send('read:file', fileContent);
 	}).catch(err => {
-		console.log(err)
+		const messageBoxOptions = {
+			type: "error",
+			title: `File open failed`,
+			message: `File ${file} may have been altered from source or contains some incorrect data. Try again by restarting the app. If the problem remains, redownload the file`
+		};
+		dialog.showMessageBox(messageBoxOptions);
 	});
 }
-
-
 if (!String.prototype.startsWith) {
 	String.prototype.startsWith = function (str) {
 		return !this.indexOf(str);
 	}
 }
-
 function parse(sentence) {
 	console.log(sentence);
 	mainWindow.webContents.on('did-finish-load', function () {
 		mainWindow.webContents.send('parse:nmea', "jasdfh");
 	});
 }
-
 function readTextFile(input, parse) {
 	var remaining = '';
 
@@ -319,7 +306,6 @@ function readTextFile(input, parse) {
 		}
 	});
 }
-
 //device setup window
 ipcMain.on('device:setup', (event) => {
 	deviceSetupWindow = new BrowserWindow({
@@ -337,7 +323,6 @@ ipcMain.on('device:setup', (event) => {
 	deviceSetupWindow.menuBarVisible = false;
 	deviceSetupWindow.loadFile(path.join(__dirname, `templates/device_setup.html`));
 });
-
 //download window
 ipcMain.on('open:download', (event) => {
 	downloadWindow = new BrowserWindow({
@@ -356,7 +341,6 @@ ipcMain.on('open:download', (event) => {
 	downloadWindow.loadFile(path.join(__dirname, `templates/data_download.html`));
 
 });
-
 //settings window
 ipcMain.on('open:settings', (event) => {
 	file = 'settings.html';
@@ -364,7 +348,6 @@ ipcMain.on('open:settings', (event) => {
 
 	newWindow(title, file, 650, 800, false);
 });
-
 // dev tools window
 ipcMain.on('open:devtools', (event) => {
 	file = 'devtools.html';
@@ -372,12 +355,10 @@ ipcMain.on('open:devtools', (event) => {
 
 	newWindow(title, file, 600, 270, false);
 });
-
 //file browse call
 ipcMain.on('show:browse', (event) => {
 	openFile();
 });
-
 //map window
 ipcMain.on('open:map', (event) => {
 	mapWindow = new BrowserWindow({
@@ -389,7 +370,7 @@ ipcMain.on('open:map', (event) => {
 		width: 800,
 		height: 600,
 		parent: mainWindow,
-		modal: true
+		modal: true,
 	});
 	//mapWindow.maximize();
 	mapWindow.menuBarVisible = false;
@@ -398,7 +379,6 @@ ipcMain.on('open:map', (event) => {
 		mapWindow = null;
 	});
 });
-
 //file browse window
 ipcMain.on('browse:logs', (event) => {
 	dialog.showOpenDialog({
@@ -408,12 +388,16 @@ ipcMain.on('browse:logs', (event) => {
 		else console.log(err);
 	});
 });
-
 //live feed log
 ipcMain.on('feed:log', (event, log) => {
 	if (log) {
 		var dt = Date().split(" ");
-		filename = `EZ_RTK_${dt[2]}_${dt[1]}_${dt[3]}_${dt[4]}.json`;
+		filename = 'hello.json';
+		//filename = `EZ_RTK_${dt[2]}_${dt[1]}_${dt[3]}_${dt[4]}.json`.toString();
+		// fs.writeFile(filename, "...", function (err) {
+		// 	if (err) throw err;
+		// 	console.log('Saved!');
+		// });
 		fs.open(filename, 'w', function (err, file) {
 			if (err) {
 				const messageBoxOptions = {
@@ -423,21 +407,32 @@ ipcMain.on('feed:log', (event, log) => {
 				};
 				dialog.showMessageBox(messageBoxOptions);
 				logMode = false;
-				//mapWindow.webContents.send('uart:status', false);
+				mainWindow.webContents.send('uart:status', false);
 				throw err;
 			};
 			logMode = true;
+			showNotification('Logging started', "");
 			console.log('Saved!');
 		});
 	} else {
 		logMode = false;
-		fs.writeFile(filename, logs, function (err) {
+		let text = '[';
+		for(l of logs) {
+			text = text + `{"Latitude":"${l.lat}","Longitude":"${l.lon}","Altitude":"${l.alt}" },`.toString();
+		}
+		//console.log(text);
+		text = text.substring(0, text.length - 1);
+		text = text + ']';
+		fs.writeFile(filename, text, function (err) {
 			if (err) throw err;
+			showNotification('Data Logged', `Logs saved in file ${filename}`);
+			filename = null;
+			logMode = false;
+			text = null;
 			console.log('Saved!');
 		});
 	}
 });
-
 // sending the state of App, either Hotspot mode or Wi-FI mode
 ipcMain.on('read:rtkType', (event, rtk) => {
 	deviceSetupWindow.webContents.send('read:rtkType', rtkType);
@@ -447,16 +442,13 @@ ipcMain.on('read:rtkType', (event, rtk) => {
 		IPAddress = hotSpotIP;
 	}
 });
-
 // sending the state of App, either Hotspot mode or Wi-FI mode
 ipcMain.on('read:IPDevTools', (event, ip) => {
 	if (rtkType != 0) {
 		IPAddress = ip;
 	}
 });
-
 // reading the last connected Wi-Fi credentials
-
 ipcMain.on('read:credentials', (event, credentials) => {
 	read_ssid = credentials.ssid;
 	read_password = credentials.password;
@@ -465,12 +457,10 @@ ipcMain.on('read:credentials', (event, credentials) => {
 		connectWifi(read_ssid, read_password);
 	}
 });
-
 // sending Server's IP to downloadWindow
 ipcMain.on('read:IP', (event) => {
 	downloadWindow.webContents.send('read:IP', IPAddress);
 });
-
 //send command
 ipcMain.on('make:command', (event, command) => {
 	// command = command + md5(command);
@@ -490,7 +480,6 @@ ipcMain.on('make:command', (event, command) => {
 			sendOverWifi(command);
 	}
 });
-
 // opening serial port with baudRate
 ipcMain.on('connect_serial', (event, serial_details) => {
 	comp = serial_details[0];
@@ -501,7 +490,6 @@ ipcMain.on('connect_serial', (event, serial_details) => {
 		loadUart(comp, baudRate);
 	}
 });
-
 function NMEAStream() {
 	if (connType != 1) {
 		clearInterval(timer);
@@ -517,7 +505,6 @@ function NMEAStream() {
 			// console.log(error);
 		});
 }
-
 // connecting wifi
 ipcMain.on('connect_wifi', (event, wifi_details) => {
 	var ssid = wifi_details[0];
@@ -550,12 +537,10 @@ ipcMain.on('connect_wifi', (event, wifi_details) => {
 		}, 2000);
 	}
 });
-
 // disconnect network or serial
 ipcMain.on('conn:close', (event) => {
 	disconnect();
 });
-
 // check uart status to enable or disable live data
 ipcMain.on('uart:status', (event) => {
 	if (connType == 0) {
@@ -574,9 +559,7 @@ ipcMain.on('uart:status', (event) => {
 			mapWindow.webContents.send('uart:status', true);
 	}
 });
-
 function sendOverWifi(command) {
-
 	if (command.substring(0, 8) == 'connect,') {
 		var sub_command = command.substring(8, command.length);
 		axios.get(`http://${IPAddress}/connect/${sub_command}`)
@@ -626,7 +609,6 @@ function sendOverWifi(command) {
 			});
 	}
 }
-
 function sendOverUart(command) {
 	if (command.substring(0, 8) == 'connect,') {
 		command = command.substring(8, command.length);
