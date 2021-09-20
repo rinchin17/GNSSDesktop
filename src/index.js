@@ -392,7 +392,11 @@ ipcMain.on('browse:logs', (event) => {
 ipcMain.on('feed:log', (event, log) => {
 	if (log) {
 		var dt = Date().split(" ");
-		filename = 'hello.json';
+		console.log(dt);
+		var dt1 = dt[4].split(":");
+		console.log(dt1);
+		filename = `EZRTK_${dt[2]}_${dt[1]}_${dt[3]}_${dt1[0]}${dt1[1]}${dt1[2]}.json`.toString();
+		//filename = 'hello.json';
 		//filename = `EZ_RTK_${dt[2]}_${dt[1]}_${dt[3]}_${dt[4]}.json`.toString();
 		// fs.writeFile(filename, "...", function (err) {
 		// 	if (err) throw err;
