@@ -223,7 +223,7 @@
 		var logSwitch = document.querySelector('#logMode');
 		logSwitch.addEventListener('change', (event) => {
 			if (logSwitch.checked) {
-				ipcRenderer.send('uart:status');
+				ipcRenderer.send('uart:status', (event, 'main'));
 			} else {
 				ipcRenderer.send('feed:log',(event, false));
 			}

@@ -65,7 +65,7 @@
 		var mode = document.querySelector('#viewMode');
 		mode.addEventListener('change', (event) => {
 			if (mode.checked) {
-				ipcRenderer.send('uart:status');
+				ipcRenderer.send('uart:status', (event, 'map'));
 				initialized = false;
 				map = null;
 				document.querySelector('#map').innerHTML = "";
