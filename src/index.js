@@ -545,13 +545,19 @@ ipcMain.on('connect_wifi', (event, wifi_details) => {
 ipcMain.on('conn:close', (event) => {
 	disconnect();
 });
+const msgMainUart = "Please connect to serial or wifi channel to start logging";
+const msgMapUart = "Please connect to serial or wifi channel to view live feed";
 // check uart status to enable or disable live data
 ipcMain.on('uart:status', (event, win) => {
 	if (connType == 0) {
+		if(win === 'main')
+			msg = msgMainUart;
+		else
+			msg = msgMapUart;
 		const messageBoxOptions = {
 			type: "error",
 			title: "Device not connected",
-			message: "Please connect to serial or wifi channel to view live feed"
+			message: msg
 		};
 		dialog.showMessageBox(messageBoxOptions);
 		if (win === 'main')
