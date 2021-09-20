@@ -546,7 +546,7 @@ ipcMain.on('conn:close', (event) => {
 	disconnect();
 });
 // check uart status to enable or disable live data
-ipcMain.on('uart:status', (event) => {
+ipcMain.on('uart:status', (event, win) => {
 	if (connType == 0) {
 		const messageBoxOptions = {
 			type: "error",
@@ -554,12 +554,14 @@ ipcMain.on('uart:status', (event) => {
 			message: "Please connect to serial or wifi channel to view live feed"
 		};
 		dialog.showMessageBox(messageBoxOptions);
-		mainWindow.webContents.send('uart:status', (event, false));
-		if (mapWindow != null)
+		if (win === 'main')
+			mainWindow.webContents.send('uart:status', (event, false));
+		if (win === 'map')
 			mapWindow.webContents.send('uart:status', false);
 	} else {
-		mainWindow.webContents.send('uart:status', true);
-		if (mapWindow != null)
+		if (win === 'main')
+			mainWindow.webContents.send('uart:status', true);
+		if (win === 'map')
 			mapWindow.webContents.send('uart:status', true);
 	}
 });
