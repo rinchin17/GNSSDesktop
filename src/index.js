@@ -422,7 +422,7 @@ ipcMain.on('feed:log', (event, log) => {
 		logMode = false;
 		let text = '[';
 		for(l of logs) {
-			text = text + `{"Latitude":"${l.lat}","Longitude":"${l.lon}","Altitude":"${l.alt}" },`.toString();
+			text = text + `{"Time":"${l.time}","RtkStatus":"${l.fix}","Latitude":"${l.lat}","Longitude":"${l.lon}","Altitude":"${l.alt}" },`.toString();
 		}
 		//console.log(text);
 		text = text.substring(0, text.length - 1);
