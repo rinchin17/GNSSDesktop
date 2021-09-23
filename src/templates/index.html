@@ -46,6 +46,12 @@
 					</div>
 					<div class="col">
 						<div class="custom-control custom-switch custom-switch-lg pt-2">
+							<input type="checkbox" class="custom-control-input" id="coordinateMode">
+							<label class="custom-control-label" for="coordinateMode">Degree</label>
+						</div>
+					</div>
+					<div class="col">
+						<div class="custom-control custom-switch custom-switch-lg pt-2">
 							<input type="checkbox" class="custom-control-input" id="logMode">
 							<label class="custom-control-label" for="logMode">Live Logging</label>
 						</div>
@@ -193,8 +199,10 @@
 
 	<script>
 		const { ipcRenderer } = require('electron');
+		var formatcoords = require('formatcoords');
 		var status_wifi = false;
 		var status_serial = false;
+		var cmode = false;
 
 		// window.onload = (event) => {
 		// 	console.log('page is fully loaded');
@@ -218,7 +226,6 @@
 		document.querySelector('#devtools').addEventListener('click', (event) => {
 			ipcRenderer.send('open:devtools');
 		});
-
 		//Live Logging
 		var logSwitch = document.querySelector('#logMode');
 		logSwitch.addEventListener('change', (event) => {
@@ -228,7 +235,6 @@
 				ipcRenderer.send('feed:log',(event, false));
 			}
 		});
-
 		ipcRenderer.on('uart:status', (event, permission) => {
 			if (permission) {
 				ipcRenderer.send('feed:log',(event, logSwitch.value));
@@ -236,12 +242,10 @@
 				logSwitch.checked = permission;
 			}
 		});
-
 		//Device setup
 		document.querySelector('#setup').addEventListener('click', (event) => {
 			ipcRenderer.send('device:setup');
 		});
-
 		// Status of Wi-Fi Connection: true or false
 		ipcRenderer.on('status:wifi', (event, status) => {
 			if (status == true) {
@@ -252,7 +256,6 @@
 				status_wifi = false;
 			}
 		});
-
 		// Status of Serial Connection: true or false
 		ipcRenderer.on('status:serial', (event, status) => {
 			if (status == true) {
@@ -263,16 +266,20 @@
 				status_serial = false;
 			}
 		});
-
-
 		const ul = document.querySelector('ul');
 		const feeds = document.getElementById('feeds');
-
 		// receiving and parsing nmea file
 		ipcRenderer.on('parse:nmea', (event, sentence) => {
 			//console.log(sentence.nmea);
-			document.querySelector('#latitude').value = sentence.lat;
-			document.querySelector('#longitude').value = sentence.lon;
+			if(cmode) {
+				var coords = formatcoords(27.725499,-18.024301);
+				var c = coords.format('DD MM ss X', {latLonSeparator: ', ',  decimalPlaces: 0}).split(',');
+				document.querySelector('#latitude').value = c[0];
+				document.querySelector('#longitude').value = c[1];
+			} else {
+				document.querySelector('#latitude').value = sentence.lat;
+				document.querySelector('#longitude').value = sentence.lon;
+			}
 			document.querySelector('#speed').value = sentence.speed;
 			document.querySelector('#hdop').value = sentence.hdop;
 			document.querySelector('#rtkStatus').value = sentence.fix;
@@ -291,6 +298,13 @@
 			} catch (e) { }
 		});
 
+		const coordinateMode = document.querySelector('#coordinateMode');	
+		coordinateMode.addEventListener('change', (event) => {
+			if(coordinateMode.checked)
+				cmode = true;
+			else
+				cmode = false;
+		});
 		// sending selected port and baudRate
 		function connectSerial() {
 			if (status_serial == true) {
@@ -319,7 +333,6 @@
 				document.getElementById('wifi1').innerHTML = '<button type="button" onclick="serialPassthrough()" class="btn btn-outline-secondary">Serial Passthrough  <i class="fa fa-angle-double-right"></i></button>';
 			}
 		}
-
 		// sending selected wifi
 		function connectWifi() {
 			if (status_wifi == true) {
@@ -366,7 +379,6 @@
 				}
 			}
 		});
-
 		// ipcRenderer.on('load:wifi', (event, wifi) => {
 		// 	let wifi_menu = document.querySelector('#wifi');
 		// 	wifi_menu.innerHTML = "<p></p>";
@@ -377,11 +389,9 @@
 		// 		wifi_menu.appendChild(op);	
 		// 	}
 		// });
-
 		function serialPassthrough() {
 			ipcRenderer.send('make:command', '$EZ_RTK,GNSS-VIEWER,RTKCOMMAND');
 		}
-
 		// var wifi = '<div class="col-4">'+
 		// 				'<select id="wifi" class="form-control">' +
 
@@ -393,9 +403,7 @@
 		// 			'<div class="col-4">'+
 		// 				'<button type="button" onclick="connectWifi()" class="btn btn-outline-secondary">Connect <i class="fa fa-plug"></i></button>'+
 		// 			'</div>';
-
 		var wifi = '<button type="button" onclick="connectWifi()" id="connect_wifi" class="btn btn-outline-secondary">Connect <i class="fa fa-plug"></i></button>';
-
 		var serial = '<div class="col-4"><select id="serial_port" class="form-control"></select></div>' +
 			'<div class="col-4"><select id="baudRate" class="form-control">' +
 			'<option>4800</option><option>9600</option><option>115200</option></select>' +
