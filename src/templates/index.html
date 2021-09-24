@@ -35,7 +35,7 @@
 					</div>
 					<div class="col-2">
 						<select id="comm_type" class="form-control" onchange="connChange()">
-							<option value="0"> --- None --- </option>
+							<option value="0"> -- None -- </option>
 							<option value="1">Wireless</option>
 							<option value="2">Wired</option>
 						</select>
@@ -44,16 +44,16 @@
 					<div class="col" id="wifi1">
 
 					</div>
-					<div class="col">
+					<div class="col-2">
 						<div class="custom-control custom-switch custom-switch-lg pt-2">
 							<input type="checkbox" class="custom-control-input" id="coordinateMode">
 							<label class="custom-control-label" for="coordinateMode">Degree</label>
 						</div>
 					</div>
-					<div class="col">
+					<div class="col-2">
 						<div class="custom-control custom-switch custom-switch-lg pt-2">
 							<input type="checkbox" class="custom-control-input" id="logMode">
-							<label class="custom-control-label" for="logMode">Live Logging</label>
+							<label class="custom-control-label" for="logMode">Live Log</label>
 						</div>
 					</div>
 				</div>
@@ -273,7 +273,7 @@
 			//console.log(sentence.nmea);
 			if(cmode) {
 				var coords = formatcoords(27.725499,-18.024301);
-				var c = coords.format('DD MM ss X', {latLonSeparator: ', ',  decimalPlaces: 0}).split(',');
+				var c = coords.format('-dd mm ss X', {latLonSeparator: ', ', decimalPlaces: 3}).split(',');
 				document.querySelector('#latitude').value = c[0];
 				document.querySelector('#longitude').value = c[1];
 			} else {
