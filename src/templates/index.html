@@ -270,7 +270,7 @@
 		const feeds = document.getElementById('feeds');
 		// receiving and parsing nmea file
 		ipcRenderer.on('parse:nmea', (event, sentence) => {
-			//console.log(sentence.nmea);
+			console.log(sentence.quality);
 			if(cmode) {
 				var coords = formatcoords(27.725499,-18.024301);
 				var c = coords.format('-dd mm ss X', {latLonSeparator: ', ', decimalPlaces: 3}).split(',');
@@ -343,7 +343,7 @@
 			}
 
 			else {
-				var wifi = "$EZ_RTK_ROVER";
+				var wifi = "EZ_RTK_ROVER";
 				var password = "1234567890";
 
 				console.log(wifi + " " + password);
