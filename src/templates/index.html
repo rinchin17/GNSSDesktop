@@ -251,6 +251,8 @@
 			if (status == true) {
 				status_wifi = true;
 				document.getElementById('connect_wifi').innerHTML = "Disconnect";
+				document.getElementById('setup').classList.remove('disabled');
+				document.getElementById('download').classList.remove('disabled');
 			}
 			else {
 				status_wifi = false;
@@ -261,6 +263,8 @@
 			if (status == true) {
 				status_serial = true;
 				document.getElementById('connect_serial').innerHTML = "Disconnect";
+				document.getElementById('setup').classList.add('disabled');
+				document.getElementById('download').classList.add('disabled');
 			}
 			else {
 				status_serial = false;
@@ -312,6 +316,8 @@
 				status_serial = false;
 				console.log('dis');
 				document.getElementById('connect_serial').innerHTML = 'Connect <i class="fa fa-plug"></i>';
+				document.getElementById('setup').classList.remove('disabled');
+				document.getElementById('download').classList.remove('disabled');
 			}
 
 			else {
@@ -343,7 +349,7 @@
 			}
 
 			else {
-				var wifi = "EZRTK_ROVER";
+				var wifi = "EZ_RTK_ROVER";
 				// var wifi = "EZRTK_BASE";
 				var password = "1234567890";
 

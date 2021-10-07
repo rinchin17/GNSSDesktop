@@ -109,7 +109,17 @@ function connectWifi(net_ssid, password) {
 	wifi.init({
 		iface: null // network interface, choose a random wifi interface if set to null
 	});
-	disconnect();
+	// disconnect();
+	wifi.disconnect(error => {
+		if (error) {
+			console.log(error);
+		} else {
+			connType = 0;
+			console.log('Disconnected. Conntype = ' + connType);
+			// showNotification('Disconnected', 'Wifi connection closed');
+		}
+	});
+
 	wifi.connect({ ssid: net_ssid, password: password }, error => {
 		if (error) {
 			console.log("Could not connect to " + net_ssid + " " + error);
@@ -134,7 +144,7 @@ function disconnect() {
 			} else {
 				connType = 0;
 				console.log('Disconnected. Conntype = ' + connType);
-				showNotification('Disconnected', 'Wifi connection closed');
+				// showNotification('Disconnected', 'Wifi connection closed');
 			}
 		});
 	}
@@ -153,6 +163,7 @@ function loadUart(comp, baudRate) {
 	disconnect();
 	port = "";
 
+	
 	port = new SerialPort(comp, {
 		baudRate: parseInt(baudRate),
 		dataBits: 8,
@@ -176,6 +187,7 @@ function loadUart(comp, baudRate) {
 
 		if (ch == 1) {
 			IPAddress = data;
+			showNotification('IP = ' + IPAddress);
 			console.log("IP Address = " + IPAddress);
 			ch = 0;
 			connectWifi(read_ssid, read_password);
@@ -457,7 +469,7 @@ ipcMain.on('read:credentials', (event, credentials) => {
 	read_ssid = credentials.ssid;
 	read_password = credentials.password;
 
-	if (read_ssid == "$EZ_RTK" && read_password == "1234567890") {
+	if (read_ssid == "EZ_RTK_ROVER" && read_password == "1234567890") {
 		connectWifi(read_ssid, read_password);
 	}
 });
@@ -530,12 +542,11 @@ ipcMain.on('connect_wifi', (event, wifi_details) => {
 							nmea = x;
 							sendNmea(x);
 						}
-
 						console.log('Response from EZRTK' + response.data);
 					})
 					.catch(error => {
 						// showNotification('Response from EZRTK', 'Some error occured!!!');
-						// console.log(error);
+						console.log(error);
 					});
 			}
 		}, 2000);
@@ -577,30 +588,43 @@ function sendOverWifi(command) {
 		axios.get(`http://${IPAddress}/connect/${sub_command}`)
 			.then(response => {
 				// showNotification('Command sent Via Wi-Fi');
-				// showNotification('Response from EZRTK', response.data);
+				showNotification('Response from EZRTK', response.data);
 				console.log('Command sent Via Wi-Fi: ' + sub_command);
-				IPAddress = response.data;
-				console.log('Response, IP = ' + IPAddress);
-				if (response.data) {
-					connectWifi(read_ssid, read_password);
-					var timer = setInterval(function () {
-						if (connType != 1) {
-							clearInterval(timer);
-						}
-						else {
-							axios.get(`http://${IPAddress}/livedata`)
-								.then(response => {
-									// showNotification('Command sent Via Wi-Fi');
-									sendNmea(response.data);
-									console.log('Response from EZRTK' + response.data);
-								})
-								.catch(error => {
-									// showNotification('Response from EZRTK', 'Some error occured!!!');
-									// console.log(error);
-								});
-						}
-					}, 2000);
+				
+				if(response.data != "Incorrect Wi-FI Credentials. Please Check!"){
+					if(response.data != "0.0.0.0")
+						IPAddress = response.data;
+					console.log('Response, IP = ' + IPAddress);
+					if (response.data) {
+						connectWifi(read_ssid, read_password);
+						var timer = setInterval(function () {
+							if (connType != 1) {
+								clearInterval(timer);
+							}
+							else {
+								axios.get(`http://${IPAddress}/livedata`)
+									.then(response => {
+										// showNotification('Command sent Via Wi-Fi');
+										var c = response.data.toString().split("\r\n");
+										for (var x of c) {
+											nmea = x;
+											sendNmea(x);
+										}
+										console.log('Response from EZRTK' + response.data);
+									})
+									.catch(error => {
+										// showNotification('Response from EZRTK', 'Some error occured!!!');
+										// console.log(error);
+									});
+							}
+						}, 2000);
+					}
 				}
+				else{
+					
+				}
+					
+				
 			})
 			.catch(error => {
 				showNotification('Response from EZRTK', 'Some error occured!!!');
