@@ -588,12 +588,14 @@ function sendOverWifi(command) {
 		axios.get(`http://${IPAddress}/connect/${sub_command}`)
 			.then(response => {
 				// showNotification('Command sent Via Wi-Fi');
-				showNotification('Response from EZRTK', response.data);
+				// showNotification('Response from EZRTK', response.data);
 				console.log('Command sent Via Wi-Fi: ' + sub_command);
 				
 				if(response.data != "Incorrect Wi-FI Credentials. Please Check!"){
-					if(response.data != "0.0.0.0")
+					if(response.data != "0.0.0.0"){
 						IPAddress = response.data;
+						showNotification('Response from EZRTK', "Wi-Fi Setup Complete!");
+					}
 					console.log('Response, IP = ' + IPAddress);
 					if (response.data) {
 						connectWifi(read_ssid, read_password);
@@ -621,7 +623,7 @@ function sendOverWifi(command) {
 					}
 				}
 				else{
-					
+					showNotification('Response from EZRTK', "Command Failed! 1. Please check Wi-Fi credentials."+"\n"+"2. Make sure the Wi-Fi network is in range."+"\n"+"Reset your ESP & App, try again.");
 				}
 					
 				
