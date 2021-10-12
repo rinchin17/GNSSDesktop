@@ -132,6 +132,31 @@ function connectWifi(net_ssid, password) {
 			mainWindow.webContents.send('status:wifi', true);
 			console.log('Connected to: ' + net_ssid + ' Conntype = ' + connType);
 			showNotification('Connected to: ', net_ssid);
+			
+			var timer = setInterval(function () {
+				console.log("conn type inside interval = "+connType);
+				if (connType != 1) {
+					console.log("CONN_TYPE!=1 = "+connType);
+					clearInterval(timer);
+					
+				}
+				else {
+					axios.get(`http://${IPAddress}/livedata`)
+						.then(response => {
+							// showNotification('Command sent Via Wi-Fi');
+							var c = response.data.toString().split("\r\n");
+							for (var x of c) {
+								nmea = x;
+								sendNmea(x);
+							}
+							console.log('Response from EZRTK' + response.data);
+						})
+						.catch(error => {
+							// showNotification('Response from EZRTK', 'Some error occured!!!');
+							console.log(error);
+						});
+				}
+			}, 2000);
 		}
 		// console.log('Wifi connected. conntype = '+connType);
 	});
@@ -529,27 +554,28 @@ ipcMain.on('connect_wifi', (event, wifi_details) => {
 		return false;
 	} else {
 		connectWifi(ssid, password);
-		var timer = setInterval(function () {
-			if (connType != 1) {
-				clearInterval(timer);
-			}
-			else {
-				axios.get(`http://${IPAddress}/livedata`)
-					.then(response => {
-						// showNotification('Command sent Via Wi-Fi');
-						var c = response.data.toString().split("\r\n");
-						for (var x of c) {
-							nmea = x;
-							sendNmea(x);
-						}
-						console.log('Response from EZRTK' + response.data);
-					})
-					.catch(error => {
-						// showNotification('Response from EZRTK', 'Some error occured!!!');
-						console.log(error);
-					});
-			}
-		}, 2000);
+		// var timer = setInterval(function () {
+		// 	console.log("conn type inside interval = "+connType);
+		// 	if (connType != 1) {
+		// 		clearInterval(timer);
+		// 	}
+		// 	else {
+		// 		axios.get(`http://${IPAddress}/livedata`)
+		// 			.then(response => {
+		// 				// showNotification('Command sent Via Wi-Fi');
+		// 				var c = response.data.toString().split("\r\n");
+		// 				for (var x of c) {
+		// 					nmea = x;
+		// 					sendNmea(x);
+		// 				}
+		// 				console.log('Response from EZRTK' + response.data);
+		// 			})
+		// 			.catch(error => {
+		// 				// showNotification('Response from EZRTK', 'Some error occured!!!');
+		// 				console.log(error);
+		// 			});
+		// 	}
+		// }, 2000);
 	}
 });
 // disconnect network or serial
@@ -623,7 +649,7 @@ function sendOverWifi(command) {
 					}
 				}
 				else{
-					showNotification('Response from EZRTK', "Command Failed! 1. Please check Wi-Fi credentials."+"\n"+"2. Make sure the Wi-Fi network is in range."+"\n"+"Reset your ESP & App, try again.");
+					showNotification('Response from EZRTK', "Command Failed!\n1. Please check Wi-Fi credentials."+"\n"+"2. Make sure the Wi-Fi network is in range."+"\n"+"Reset your ESP & App, try again.");
 				}
 					
 				
