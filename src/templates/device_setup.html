@@ -95,7 +95,7 @@
 			}
             else {
                 rtkType = 0;
-                ipcRenderer.send('read:rtkType',rtkType);
+                // ipcRenderer.send('read:rtkType',rtkType);
 				document.querySelector('#rtk_view').innerHTML = "";
                 enableHotspotRTK();
 			}
@@ -129,10 +129,10 @@
 
         function enableHotspotRTK(){
             rtkType = 0;
-            ipcRenderer.send('read:rtkType',rtkType);
+            
             document.querySelector('#rtk_view').innerHTML = rtk_view_hot;
             document.querySelector('#btnHotspotRTK').addEventListener('click', (event) => {
-                var ssid = "$EZ_RTK";
+                var ssid = "EZ_RTK_ROVER";
                 var password = "1234567890";
                 
                 if(ssid.length>0 && password.length>=8){
@@ -140,6 +140,8 @@
                     var credentials = {ssid,password};
                     console.log(credentials);
                     ipcRenderer.send('read:credentials', credentials);
+                    ipcRenderer.send('read:rtkType',rtkType);
+                    // ipcRenderer.send('make:command', command);
                 }
                 else{
                     console.log("enter valid ssid and password");

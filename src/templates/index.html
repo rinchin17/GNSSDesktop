@@ -251,6 +251,8 @@
 			if (status == true) {
 				status_wifi = true;
 				document.getElementById('connect_wifi').innerHTML = "Disconnect";
+				document.getElementById('setup').classList.remove('disabled');
+				document.getElementById('download').classList.remove('disabled');
 			}
 			else {
 				status_wifi = false;
@@ -261,6 +263,8 @@
 			if (status == true) {
 				status_serial = true;
 				document.getElementById('connect_serial').innerHTML = "Disconnect";
+				document.getElementById('setup').classList.add('disabled');
+				document.getElementById('download').classList.add('disabled');
 			}
 			else {
 				status_serial = false;
@@ -312,6 +316,8 @@
 				status_serial = false;
 				console.log('dis');
 				document.getElementById('connect_serial').innerHTML = 'Connect <i class="fa fa-plug"></i>';
+				document.getElementById('setup').classList.remove('disabled');
+				document.getElementById('download').classList.remove('disabled');
 			}
 
 			else {
@@ -343,8 +349,13 @@
 			}
 
 			else {
+<<<<<<< HEAD
 				var wifi = "EZ_RTK_ROVER";
 				var password = "1234567890";
+=======
+				var wifi = document.querySelector('#wifi').value;
+				var password = document.querySelector('#password').value;
+>>>>>>> 31243fd712872608556103bf094399d01afb2e34
 
 				console.log(wifi + " " + password);
 				var wifi_details = [];
@@ -379,31 +390,38 @@
 				}
 			}
 		});
-		// ipcRenderer.on('load:wifi', (event, wifi) => {
-		// 	let wifi_menu = document.querySelector('#wifi');
-		// 	wifi_menu.innerHTML = "<p></p>";
-		// 	for (var i=0;i<wifi.length;i++) {
-		// 		const op = document.createElement('option');
-		// 		op.innerHTML = wifi[i];
-		// 		op.value = wifi[i];
-		// 		wifi_menu.appendChild(op);	
-		// 	}
-		// });
+		
+		ipcRenderer.on('load:wifi', (event, wifi) => {
+			let wifi_menu = document.querySelector('#wifi');
+			wifi_menu.innerHTML = "<p></p>";
+			for (var i=0;i<wifi.length;i++) {
+				const op = document.createElement('option');
+				op.innerHTML = wifi[i];
+				op.value = wifi[i];
+				wifi_menu.appendChild(op);	
+			}
+		});
+
 		function serialPassthrough() {
 			ipcRenderer.send('make:command', '$EZ_RTK,GNSS-VIEWER,RTKCOMMAND');
 		}
-		// var wifi = '<div class="col-4">'+
-		// 				'<select id="wifi" class="form-control">' +
+		
+		var wifi = '<div class="col-4">'+
+						'<select id="wifi" class="form-control">' +
 
-		// 				'</select>'+
-		// 			'</div>'+
-		// 			'<div class="col-4">'+
-		// 				'<input id="password" type="password" value="bedrock@8540" class="form-control" placeholder="Password">'+
-		// 			'</div>'+
-		// 			'<div class="col-4">'+
-		// 				'<button type="button" onclick="connectWifi()" class="btn btn-outline-secondary">Connect <i class="fa fa-plug"></i></button>'+
-		// 			'</div>';
-		var wifi = '<button type="button" onclick="connectWifi()" id="connect_wifi" class="btn btn-outline-secondary">Connect <i class="fa fa-plug"></i></button>';
+						'</select>'+
+					'</div>'+
+					'<div class="col-3">'+
+						'<input id="password" type="password" value="Bedrock@8540" class="form-control" placeholder="Password">'+
+					'</div>'+
+					'<div class="col-1">'+
+                                    '<i class="fa fa-eye pt-2 text-muted" id="togglePassword" onclick="changePasswordVisibility()"></i>'+
+					'</div>'+
+					'<div class="col-4">'+
+						'<button type="button" onclick="connectWifi()" id="connect_wifi" class="btn btn-outline-secondary">Connect <i class="fa fa-plug"></i></button>'+
+					'</div>';
+
+		// var wifi = '<button type="button" onclick="connectWifi()" id="connect_wifi" class="btn btn-outline-secondary">Connect <i class="fa fa-plug"></i></button>';
 		var serial = '<div class="col-4"><select id="serial_port" class="form-control"></select></div>' +
 			'<div class="col-4"><select id="baudRate" class="form-control">' +
 			'<option>4800</option><option>9600</option><option>115200</option></select>' +
@@ -422,11 +440,11 @@
 				status_serial = false;
 			}
 			else if (conType == 1) {
-				document.getElementById('wifi1').innerHTML = wifi;
+				document.getElementById('Connect').innerHTML = wifi;
 				if (status_wifi == true) {
 					document.getElementById('connect_wifi').innerHTML = 'Disconnect';
 				}
-				document.getElementById('Connect').innerHTML = "";
+				// document.getElementById('Connect').innerHTML = "";
 				ipcRenderer.send('load:wifi');
 			}
 			else {
@@ -434,10 +452,23 @@
 				if (status_serial == true) {
 					document.getElementById('connect_serial').innerHTML = 'Disconnect';
 				}
-				document.getElementById('wifi1').innerHTML = "";
+				// document.getElementById('Connect').innerHTML = "";
 				ipcRenderer.send('load:device');
 			}
 		}
+		
+		function changePasswordVisibility(){
+            var password_field = document.getElementById('password');
+
+            if(password_field.type === "password"){
+                password_field.type = "text";
+            }
+            else{
+                password_field.type = "password";
+            }
+            var toggle = document.getElementById('togglePassword');
+            toggle.classList.toggle('fa-eye-slash');
+        }
 
 	</script>
 
