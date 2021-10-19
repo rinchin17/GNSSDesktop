@@ -12,15 +12,15 @@
 		<div class="row">
 			<div class="col-3" style="height: 100vh; background: #8DA1AF">
 				<div class="list-group">
-					<button id="device" class="list-group-item btn btn-outline-dark mt-5"><span
+					<button id="device" class="list-group-item btn btn-outline-dark mt-5 disabled"><span
 							class="fa fa-desktop"></span> Device</button>
-					<button id="download" class="list-group-item btn btn-outline-dark mt-2"><span
+					<button id="download" class="list-group-item btn btn-outline-dark mt-2 disabled"><span
 							class="fa fa-download"></span> Download</button>
-					<button id="map" class="list-group-item btn btn-outline-dark mt-2"><span
+					<button id="map" class="list-group-item btn btn-outline-dark mt-2 disabled"><span
 							class="fa fa-map-marker"></span> Map Tracker</button>
-					<button id="setup" class="list-group-item btn btn-outline-dark mt-2"><span
+					<button id="setup" class="list-group-item btn btn-outline-dark mt-2 disabled"><span
 							class="fa fa-signal"></span> Network RTK</button>
-					<button id="settings" class="list-group-item btn btn-outline-dark mt-2"><span
+					<button id="settings" class="list-group-item btn btn-outline-dark mt-2 disabled"><span
 							class="fa fa-cogs"></span> Settings</button>
 					<button id="devtools" class="list-group-item btn btn-outline-dark mt-2"><span
 							class="fa fa-code"></span> Dev Tools</button>
@@ -203,13 +203,7 @@
 		var status_wifi = false;
 		var status_serial = false;
 		var cmode = false;
-
-		// window.onload = (event) => {
-		// 	console.log('page is fully loaded');
-		// 	var hotspot_credentials = {ssid:'$EZ_RTK',password:'1234567890'};
-		// 	ipcRenderer.send('read:credentials', hotspot_credentials);
-		// };
-
+		
 		//Menu selectors
 		document.querySelector('#device').addEventListener('click', (event) => {
 			ipcRenderer.send('open:device');
@@ -251,6 +245,9 @@
 			if (status == true) {
 				status_wifi = true;
 				document.getElementById('connect_wifi').innerHTML = "Disconnect";
+				document.getElementById('device').classList.remove('disabled');
+				document.getElementById('map').classList.remove('disabled');
+				document.getElementById('settings').classList.remove('disabled');
 				document.getElementById('setup').classList.remove('disabled');
 				document.getElementById('download').classList.remove('disabled');
 			}
@@ -258,11 +255,15 @@
 				status_wifi = false;
 			}
 		});
+		
 		// Status of Serial Connection: true or false
 		ipcRenderer.on('status:serial', (event, status) => {
 			if (status == true) {
 				status_serial = true;
 				document.getElementById('connect_serial').innerHTML = "Disconnect";
+				document.getElementById('device').classList.remove('disabled');
+				document.getElementById('map').classList.remove('disabled');
+				document.getElementById('settings').classList.remove('disabled');
 				document.getElementById('setup').classList.add('disabled');
 				document.getElementById('download').classList.add('disabled');
 			}
@@ -270,8 +271,10 @@
 				status_serial = false;
 			}
 		});
+		
 		const ul = document.querySelector('ul');
 		const feeds = document.getElementById('feeds');
+
 		// receiving and parsing nmea file
 		ipcRenderer.on('parse:nmea', (event, sentence) => {
 			console.log(sentence.quality);
@@ -309,6 +312,7 @@
 			else
 				cmode = false;
 		});
+
 		// sending selected port and baudRate
 		function connectSerial() {
 			if (status_serial == true) {
@@ -339,6 +343,7 @@
 				document.getElementById('wifi1').innerHTML = '<button type="button" onclick="serialPassthrough()" class="btn btn-outline-secondary">Serial Passthrough  <i class="fa fa-angle-double-right"></i></button>';
 			}
 		}
+		
 		// sending selected wifi
 		function connectWifi() {
 			if (status_wifi == true) {
@@ -416,12 +421,14 @@
 						'<button type="button" onclick="connectWifi()" id="connect_wifi" class="btn btn-outline-secondary">Connect <i class="fa fa-plug"></i></button>'+
 					'</div>';
 
-		// var wifi = '<button type="button" onclick="connectWifi()" id="connect_wifi" class="btn btn-outline-secondary">Connect <i class="fa fa-plug"></i></button>';
+		
 		var serial = '<div class="col-4"><select id="serial_port" class="form-control"></select></div>' +
-			'<div class="col-4"><select id="baudRate" class="form-control">' +
-			'<option>4800</option><option>9600</option><option>115200</option></select>' +
-			'</div>' +
-			'<div class="col-4"><button type="button" id="connect_serial" onclick="connectSerial()" class="btn btn-outline-secondary">Connect <i class="fa fa-plug"></i></button></div>';
+						'<div class="col-4"><select id="baudRate" class="form-control">' +
+							'<option>4800</option><option>9600</option><option>115200</option></select>' +
+					 '</div>' +
+					 '<div class="col-4">'+
+						'<button type="button" id="connect_serial" onclick="connectSerial()" class="btn btn-outline-secondary">Connect <i class="fa fa-plug"></i></button>'+
+					 '</div>';
 
 		function connChange() {
 			var conType = document.getElementById('comm_type').value;
@@ -433,6 +440,11 @@
 				ipcRenderer.send('conn:close');
 				status_wifi = false;
 				status_serial = false;
+				document.getElementById('device').classList.add('disabled');
+				document.getElementById('download').classList.add('disabled');
+				document.getElementById('map').classList.add('disabled');
+				document.getElementById('setup').classList.add('disabled');
+				document.getElementById('settings').classList.add('disabled');
 			}
 			else if (conType == 1) {
 				document.getElementById('Connect').innerHTML = wifi;
@@ -441,7 +453,6 @@
 				} else {
 					document.getElementById('connect_wifi').innerHTML = 'Connect';
 				}
-				// document.getElementById('Connect').innerHTML = "";
 				ipcRenderer.send('load:wifi');
 			}
 			else {
@@ -451,7 +462,6 @@
 				} else {
 					document.getElementById('connect_serial').innerHTML = 'Connect';
 				}
-				// document.getElementById('Connect').innerHTML = "";
 				ipcRenderer.send('load:device');
 			}
 		}

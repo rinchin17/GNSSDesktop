@@ -135,7 +135,6 @@ function connectWifi(net_ssid, password) {
 				else {
 					axios.get(`http://${IPAddress}/livedata`)
 						.then(response => {
-							// showNotification('Command sent Via Wi-Fi');
 							var c = response.data.toString().split("\r\n");
 							for (var x of c) {
 								nmea = x;
@@ -150,7 +149,6 @@ function connectWifi(net_ssid, password) {
 				}
 			}, 2000);
 		}
-		// console.log('Wifi connected. conntype = '+connType);
 	});
 }
 function disconnect() {
@@ -160,7 +158,7 @@ function disconnect() {
 				console.log(error);
 			} else {
 				connType = 0;
-				console.log('Disconnected. Conntype = ' + connType);
+				console.log('Disconnected Wi-Fi. Conntype = ' + connType);
 				showNotification('Disconnected', 'Wifi connection closed');
 			}
 		});
@@ -170,9 +168,12 @@ function disconnect() {
 			if(error) console.log(error);
 			port = null;
 			connType = 0;
-			console.log('Disconnected. Conntype = ' + connType);
+			console.log('Disconnected Serial. Conntype = ' + connType);
 			showNotification('Disconnected', 'Serial connection closed ');
 		});
+	}
+	else{
+		console.log('None: ConnType is ' + connType);
 	}
 	console.log(connType);
 }
@@ -545,28 +546,6 @@ ipcMain.on('connect_wifi', (event, wifi_details) => {
 		return false;
 	} else {
 		connectWifi(ssid, password);
-		// var timer = setInterval(function () {
-		// 	console.log("conn type inside interval = "+connType);
-		// 	if (connType != 1) {
-		// 		clearInterval(timer);
-		// 	}
-		// 	else {
-		// 		axios.get(`http://${IPAddress}/livedata`)
-		// 			.then(response => {
-		// 				// showNotification('Command sent Via Wi-Fi');
-		// 				var c = response.data.toString().split("\r\n");
-		// 				for (var x of c) {
-		// 					nmea = x;
-		// 					sendNmea(x);
-		// 				}
-		// 				console.log('Response from EZRTK' + response.data);
-		// 			})
-		// 			.catch(error => {
-		// 				// showNotification('Response from EZRTK', 'Some error occured!!!');
-		// 				console.log(error);
-		// 			});
-		// 	}
-		// }, 2000);
 	}
 });
 // disconnect network or serial
@@ -604,8 +583,6 @@ function sendOverWifi(command) {
 		var sub_command = command.substring(8, command.length);
 		axios.get(`http://${IPAddress}/connect/${sub_command}`)
 			.then(response => {
-				// showNotification('Command sent Via Wi-Fi');
-				// showNotification('Response from EZRTK', response.data);
 				console.log('Command sent Via Wi-Fi: ' + sub_command);
 				
 				if(response.data != "Incorrect Wi-FI Credentials. Please Check!"){
@@ -623,7 +600,6 @@ function sendOverWifi(command) {
 							else {
 								axios.get(`http://${IPAddress}/livedata`)
 									.then(response => {
-										// showNotification('Command sent Via Wi-Fi');
 										var c = response.data.toString().split("\r\n");
 										for (var x of c) {
 											nmea = x;
@@ -653,8 +629,6 @@ function sendOverWifi(command) {
 	else {
 		axios.get(`http://${IPAddress}/command/${command}`)
 			.then(response => {
-				// showNotification('Command sent Via Wi-Fi');
-				// showNotification('Response from EZRTK', response.data);
 				console.log('Command sent Via Wi-Fi: ' + command);
 				console.log('Response from EZRTK: ' + response.data);
 			})
