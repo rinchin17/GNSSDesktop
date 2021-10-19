@@ -438,6 +438,8 @@
 				document.getElementById('Connect').innerHTML = wifi;
 				if (status_wifi == true) {
 					document.getElementById('connect_wifi').innerHTML = 'Disconnect';
+				} else {
+					document.getElementById('connect_wifi').innerHTML = 'Connect';
 				}
 				// document.getElementById('Connect').innerHTML = "";
 				ipcRenderer.send('load:wifi');
@@ -446,6 +448,8 @@
 				document.getElementById('Connect').innerHTML = serial;
 				if (status_serial == true) {
 					document.getElementById('connect_serial').innerHTML = 'Disconnect';
+				} else {
+					document.getElementById('connect_serial').innerHTML = 'Connect';
 				}
 				// document.getElementById('Connect').innerHTML = "";
 				ipcRenderer.send('load:device');

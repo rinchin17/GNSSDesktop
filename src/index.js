@@ -109,17 +109,8 @@ function connectWifi(net_ssid, password) {
 	wifi.init({
 		iface: null // network interface, choose a random wifi interface if set to null
 	});
-	// disconnect();
-	wifi.disconnect(error => {
-		if (error) {
-			console.log(error);
-		} else {
-			connType = 0;
-			console.log('Disconnected. Conntype = ' + connType);
-			// showNotification('Disconnected', 'Wifi connection closed');
-		}
-	});
 
+	disconnect();
 	wifi.connect({ ssid: net_ssid, password: password }, error => {
 		if (error) {
 			console.log("Could not connect to " + net_ssid + " " + error);
@@ -130,6 +121,7 @@ function connectWifi(net_ssid, password) {
 		else {
 			connType = 1;
 			mainWindow.webContents.send('status:wifi', true);
+			mainWindow.webContents.send('status:serial', false);
 			console.log('Connected to: ' + net_ssid + ' Conntype = ' + connType);
 			showNotification('Connected to: ', net_ssid);
 			
@@ -169,26 +161,24 @@ function disconnect() {
 			} else {
 				connType = 0;
 				console.log('Disconnected. Conntype = ' + connType);
-				// showNotification('Disconnected', 'Wifi connection closed');
+				showNotification('Disconnected', 'Wifi connection closed');
 			}
 		});
 	}
 	if (connType == 2) {
-		port.close(() => {
+		port.close(error => {
+			if(error) console.log(error);
+			port = null;
 			connType = 0;
 			console.log('Disconnected. Conntype = ' + connType);
-			showNotification('Disconnected', 'Serial connection closed ')
+			showNotification('Disconnected', 'Serial connection closed ');
 		});
 	}
-
 	console.log(connType);
 }
 // opening the UART channel
 function loadUart(comp, baudRate) {
 	disconnect();
-	port = "";
-
-	
 	port = new SerialPort(comp, {
 		baudRate: parseInt(baudRate),
 		dataBits: 8,
@@ -203,10 +193,11 @@ function loadUart(comp, baudRate) {
 		showNotification('Port opened with Baud Rate = ' + baudRate);
 		console.log('Port opened with Baud Rate = ' + baudRate);
 		mainWindow.webContents.send('status:serial', true);
+		mainWindow.webContents.send('status:wifi', false);
 		console.log(connType);
 	});
 
-	const parser = port.pipe(new Readline({ delimiter: '\r\n' }));
+	let parser = port.pipe(new Readline({ delimiter: '\r\n' }));
 
 	parser.on('data', async data => {
 
