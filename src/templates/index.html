@@ -266,6 +266,7 @@
 				document.getElementById('settings').classList.remove('disabled');
 				document.getElementById('setup').classList.add('disabled');
 				document.getElementById('download').classList.add('disabled');
+				document.getElementById('wifi1').innerHTML = '<button type="button" onclick="serialPassthrough()" class="btn btn-outline-secondary">Serial Passthrough  <i class="fa fa-angle-double-right"></i></button>';
 			}
 			else {
 				status_serial = false;
@@ -339,8 +340,6 @@
 				// removing the last selected serial port and baudRate
 				serial_details.pop();
 				serial_details.pop();
-
-				document.getElementById('wifi1').innerHTML = '<button type="button" onclick="serialPassthrough()" class="btn btn-outline-secondary">Serial Passthrough  <i class="fa fa-angle-double-right"></i></button>';
 			}
 		}
 		
@@ -448,6 +447,7 @@
 			}
 			else if (conType == 1) {
 				document.getElementById('Connect').innerHTML = wifi;
+				document.getElementById('wifi1').innerHTML = "";
 				if (status_wifi == true) {
 					document.getElementById('connect_wifi').innerHTML = 'Disconnect';
 				} else {
@@ -458,9 +458,11 @@
 			else {
 				document.getElementById('Connect').innerHTML = serial;
 				if (status_serial == true) {
+					document.getElementById('wifi1').innerHTML = '<button type="button" onclick="serialPassthrough()" class="btn btn-outline-secondary">Serial Passthrough  <i class="fa fa-angle-double-right"></i></button>';
 					document.getElementById('connect_serial').innerHTML = 'Disconnect';
 				} else {
 					document.getElementById('connect_serial').innerHTML = 'Connect';
+					document.getElementById('wifi1').innerHTML = "";
 				}
 				ipcRenderer.send('load:device');
 			}
