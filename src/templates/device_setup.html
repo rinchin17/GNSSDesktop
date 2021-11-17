@@ -9,25 +9,29 @@
 
 <body>
     <div class="container">
-        <h3 class="mt-3">
-            Network RTK
+        <h3 class="mt-2">
+            RTK Connectivity
         </h3>
 
         <div class="dropdown-divider"></div>
         
         <div class="row mt-2 ml-1">
-            <div class="col-12 mt-3 text-center">
-                <span class="fa fa-info-circle text-muted mt-1 mr-1"></span><span class="text-muted">Toggle the switch to turn on/off Network RTK</span>
+            <div class="col-12 mt-2 text-center">
+                <span class="fa fa-info-circle text-muted mt-1 mr-1"></span><span class="text-muted small">Toggle the switch to turn on/off Network RTK</span>
             </div>  
         </div>
 
-        <div class="dropdown-divider mt-4"></div>
+        <center><div class="col-6 dropdown-divider mt-2"></div></center>
+        
+        <div class="container mt-3" id="server_id">
+
+        </div>
 
         <div class="row">
             <div class="col-12 text-center">
-                <div class="custom-control custom-switch custom-switch-lg mt-3">
+                <div class="custom-control custom-switch custom-switch-lg mt-1">
                     <input type="checkbox" class="custom-control-input" id="viewMode">
-                    <label class="custom-control-label" for="viewMode">Network RTK</label>
+                    <label class="custom-control-label" for="viewMode"> RTK Connectivity</label>
                 </div>
             </div>
         </div>    
@@ -37,43 +41,39 @@
 
     </div>
 
+    <!-- <div class="card text-center">
+        <div class="card-body">
+          <h6 class="card-title">Connected to: Rinchin17 <i class="fa fa-check-circle" style="color: green;"></i></h6>
+        </div>
+    </div> -->
+    
+
     <script>
-        const electron = require('electron')
+        const electron = require('electron');
+        const { Notification } = electron;
         const { ipcRenderer } = electron;
+        const axios = require('axios');
+        var wifi = require('node-wifi');
         var rtkType;    // 0 for Hotspot, 1 for Wi-Fi
         var count = 0;
-        
-        var rtk_mode = document.querySelector('#viewMode');
+        var ssid, password, net_conn=0,ssid_net;
+        var ssid_IP = '',send_ip=null;
 
-        var rtk_view_net =  '<div class="row">'+
-                                '<div class="col-6 text-center">'+
-                                    '<input type="text" id="ssid" placeholder="Enter SSID" class="form-control mt-3 text-center">'+
-                                '</div>'+
-                                '<div class="col-5 text-center">'+
-                                    '<input type="password" id="password" placeholder="Enter Password" class="form-control mt-3 text-center">'+
-                                '</div>'+
+        function showNotification(title, body) {
+            const notification = {
+                title: title,
+                body: body
+            }
+            new Notification(notification).show()
+        }
+        ipcRenderer.send('read:net_conn');
 
-                                '<div class="col-1 mt-3">'+
-                                    '<i class="fa fa-eye pt-2 text-muted" id="togglePassword" onclick="changePasswordVisibility()"></i>'+
-                                '</div>'+
-                            '</div>'+
-
-                           
-
-                            '<div class="row text-center">'+
-                                '<div class="col-12">'+
-                                    '<button class="btn btn-outline-secondary mt-4" id="btnRTK" role="button" type="button">Connect</button>'+
-                                '</div>'+
-                            '</div>';
-
-        var rtk_view_hot =  '<div class="row text-center">'+
-                                '<div class="col-12">'+
-                                    '<button class="btn btn-outline-secondary mt-4" id="btnHotspotRTK" role="button" type="button">Use Hotspot RTK</button>'+
-                                '</div>'+
-                            '</div>';
+        ipcRenderer.on('read:net_conn', (event, net) => {
+            net_conn = net;
+        });
 
         ipcRenderer.send('read:rtkType');
-        
+
         ipcRenderer.on('read:rtkType', (event, rtk_Type) => {
             rtkType = rtk_Type;
             if(rtkType == 1 && count==0){
@@ -88,43 +88,151 @@
             count++;
         });
 
+        ipcRenderer.send('read:IPNetworkWin');
 
+        var rtk_mode = document.querySelector('#viewMode');
+
+        var rtk_view_net =  '<div class="card mt-4">'+
+                                '<div class="card-body">'+
+                            '<div class="row">'+
+                                '<div class="col-6 text-center">'+
+                                    '<input type="text" id="ssid" placeholder="Enter SSID" class="form-control mt-2 text-center">'+
+                                '</div>'+
+                                '<div class="col-5 text-center">'+
+                                    '<input type="password" id="password" placeholder="Enter Password" class="form-control mt-2 text-center">'+
+                                '</div>'+
+
+                                '<div class="col-1 mt-2">'+
+                                    '<i class="fa fa-eye pt-2 text-muted" id="togglePassword" onclick="changePasswordVisibility()"></i>'+
+                                '</div>'+
+                            '</div>'+
+
+                            '<div class="row text-center mt-1">'+
+                                '<div class="col-12">'+
+                                    '<button class="btn btn-outline-secondary mt-2" id="btnRTK" role="button" type="button">Connect</button>'+
+                                '</div>'+
+                            '</div>'+
+                            '</div></div></div>';
+
+
+        var rtk_view_hot =  '<div class="row text-center">'+
+                                '<div class="col-12">'+
+                                    '<button class="btn btn-outline-secondary mt-4" id="btnHotspotRTK" role="button" type="button">Use Hotspot RTK</button>'+
+                                '</div>'+
+                            '</div>';
+        
+        var server_ui =  '<div class="row text-center">'+
+                            '<div class="col-12">'+
+                                '<strong>Current Server: ';
+
+
+        ipcRenderer.on('read:IPNetworkWin', (event, IPAddress) => {
+			console.log("IP: "+IPAddress);
+            axios.get(`http://${IPAddress}/init/`)
+			.then(response => {
+                if(response){
+                    ssid_IP = response.data.split(':');
+                    ssid = ssid_IP[0];
+                    send_ip = ssid_IP[1];
+                    console.log('Response: ' + ssid);
+                    document.querySelector('#server_id').innerHTML = server_ui+ssid_IP[0]+'<strong>'+'</div></div><div class="dropdown-divider "></div>';
+                }
+				
+			})
+			.catch(error => {
+				console.log(error);
+			});
+		
+		});
+
+        var rtk_view_net_conn = '<div class="card mt-3">'+
+                                    '<div class="card-body">'+
+                                    '<h6 class="card-title text-center">Connected to: ';
+
+        ipcRenderer.on('update:network', (event, wifi_details) => {
+          ssid_net = wifi_details.read_ssid;
+          password = wifi_details.read_password;
+          console.log("successful");
+          net_conn = 1;
+          document.querySelector('#rtk_view').innerHTML = rtk_view_net_conn + ssid_net +  
+                                                                        ' <i class="fa fa-check-circle" style="color: green;"></i></h6>'+
+                                                                        '<center><div class="col-6 dropdown-divider mt-2"></div></center>'+
+                                                                        '<p style="font-size: 14px" class="card-text text-muted">If you want to use some other network instead of <strong>'+ssid_net+'</strong>, then follow these steps:</p>'+
+                                                                        '<p style="font-size: 13px" class="card-text text-muted">1. Close this Tab and go to Main Menu.<br>2. Press "Disconnect" to disconnect wireless connection.<br>3. Select EZRTK Hotspot and press "Connect".<br>4. Once connected, open Network RTK Tab and connect to preferred network.</p>'+
+                                                                        '</div>'+
+                                                                        '</div>';
+          document.querySelector('#server_id').innerHTML = server_ui + ssid_net+'<strong>'+'</div></div><div class="dropdown-divider "></div>';
+        //   document.querySelector('#server_id').innerHTML = server_ui+ssid_IP[0]+'<strong>'+'</div></div><div class="dropdown-divider "></div>';
+        });
+      
 		rtk_mode.addEventListener('change', (event) => {
 			if (rtk_mode.checked) {
                 enableNetworkRTK();
 			}
             else {
                 rtkType = 0;
-                // ipcRenderer.send('read:rtkType',rtkType);
+                ipcRenderer.send('read:rtkType',rtkType);
 				document.querySelector('#rtk_view').innerHTML = "";
                 enableHotspotRTK();
 			}
 		});
 
-        
-
         function enableNetworkRTK(){
+            console.log("net_conn = "+net_conn);
             rtkType = 1;
             ipcRenderer.send('read:rtkType',rtkType);
-            document.querySelector('#rtk_view').innerHTML = rtk_view_net;
-            document.querySelector('#btnRTK').addEventListener('click', (event) => {
-                var ssid = document.querySelector('#ssid').value;
-                var password = document.querySelector('#password').value;
+            if(net_conn!=1){
                 
-                if(ssid.length>0 && password.length>=8){
-                    // var command = "$EZ_RTK,SET-WIFI,"+ssid+","+password;
-                    var command = "connect,$EZ_RTK,SET-WIFI,"+ssid+","+password;
-                    var credentials = {ssid,password};
-                    console.log(credentials);
-                    ipcRenderer.send('read:credentials', credentials);
-                    ipcRenderer.send('make:command', command);
-                    console.log("from device setup,"+command);
-                }
-                else{
-                    console.log("enter valid ssid and password");
-                }
+                document.querySelector('#rtk_view').innerHTML = rtk_view_net;
+                document.querySelector('#btnRTK').addEventListener('click', (event) => {
+                    var ssid_field = document.querySelector('#ssid').value;
+                    var password_field = document.querySelector('#password').value;
+                    
+                    if(ssid_field.length>0 && password_field.length>=8){
+                        var command = "connect,$EZ_RTK,SET-WIFI,"+ssid_field+","+password_field;
+                        var credentials = {ssid_field,password_field};
+                        // console.log(credentials);
+                        
+                        if(ssid==ssid_field){
+                            credentials['ip'] = send_ip;
+                            console.log("ssid = ssid_field"+send_ip);
+                            ipcRenderer.send('read:credentials', credentials);    
+                        }
+                        else{
+                            ipcRenderer.send('read:credentials', credentials); 
+                            ipcRenderer.send('make:command', command);
+                        }
+                    }
+                    else{
+                        console.log("enter valid ssid and password");
+                        showNotification('Warning!',"Please enter valid ssid and password.");
+                    }
+                });
+            }
+            else if(net_conn==1){
+                wifi.init({
+                    iface: null // network interface, choose a random wifi interface if set to null
+                });
+                wifi.getCurrentConnections((error, currentConnections) => {
+                    if (error) {
+                    console.log(error);
+                    } 
+                    else{
+                        var current_wifi;
+                        current_wifi = currentConnections[0].ssid;
+                        console.log("-------Current connections: "+current_wifi);
+                        document.querySelector('#rtk_view').innerHTML = rtk_view_net_conn + current_wifi + 
+                                                                        ' <i class="fa fa-check-circle" style="color: green;"></i></h6>'+
+                                                                        '<center><div class="col-6 dropdown-divider mt-2"></div></center>'+
+                                                                        '<p style="font-size: 14px" class="card-text text-muted">If you want to use some other network instead of <strong>'+current_wifi+'</strong>, then follow these steps:</p>'+
+                                                                        '<p style="font-size: 13px" class="card-text text-muted">1. Close this Tab and go to Main Menu.<br>2. Press "Disconnect" to disconnect wireless connection.<br>3. Select EZRTK Hotspot and press "Connect".<br>4. Once connected, open Network RTK Tab and connect to preferred network.</p>'+
+                                                                        '</div>'+
+                                                                        '</div>';
+                    }
+                });
                 
-            });
+            }
+            
         }
 
         function enableHotspotRTK(){
