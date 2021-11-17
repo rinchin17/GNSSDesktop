@@ -14,8 +14,8 @@ let deviceSetupWindow;
 var hotSpotIP = "192.168.4.1";
 var IPAddress = hotSpotIP;
 var ch = 0;
-var rtkType = 0;
-var read_ssid, read_password;
+var rtkType = 0, net_conn = 0;
+var read_ssid, read_password, ssid_net;
 var nmea = "";
 var logMode = false;
 var logs = [];
@@ -111,6 +111,7 @@ function connectWifi(net_ssid, password) {
 	});
 
 	disconnect();
+	
 	wifi.connect({ ssid: net_ssid, password: password }, error => {
 		if (error) {
 			console.log("Could not connect to " + net_ssid + " " + error);
@@ -120,6 +121,10 @@ function connectWifi(net_ssid, password) {
 		}
 		else {
 			connType = 1;
+			// if Wi-Fi is hotspot of EZRTK, update IP
+			if(net_ssid.startsWith("EZRTK")){
+				IPAddress = "192.168.4.1";
+			}
 			mainWindow.webContents.send('status:wifi', true);
 			mainWindow.webContents.send('status:serial', false);
 			console.log('Connected to: ' + net_ssid + ' Conntype = ' + connType);
@@ -344,7 +349,7 @@ ipcMain.on('device:setup', (event) => {
 		},
 		title: 'Device Setup',
 		width: 600,
-		height: 450,
+		height: 500,
 		parent: mainWindow,
 		modal: true
 	});
@@ -475,25 +480,52 @@ ipcMain.on('read:rtkType', (event, rtk) => {
 		IPAddress = hotSpotIP;
 	}
 });
-// sending the state of App, either Hotspot mode or Wi-FI mode
-ipcMain.on('read:IPDevTools', (event, ip) => {
-	if (rtkType != 0) {
-		IPAddress = ip;
+
+// sending the state of Network RTK
+ipcMain.on('read:net_conn', (event, net) => {
+	if(IPAddress==hotSpotIP){
+		// ssid_net = 'None';
+		net_conn = 0;	
 	}
+	else{
+		// ssid_net = net[1];
+	}
+	deviceSetupWindow.webContents.send('read:net_conn', net_conn);
+});
+
+// changing IP Address from DevTools
+ipcMain.on('read:IPDevTools', (event, ip) => {
+	// if (rtkType != 0) {
+		IPAddress = ip;
+	// }
 });
 // reading the last connected Wi-Fi credentials
 ipcMain.on('read:credentials', (event, credentials) => {
-	read_ssid = credentials.ssid;
-	read_password = credentials.password;
-
-	if (read_ssid == "EZ_RTK_ROVER" && read_password == "1234567890") {
-		connectWifi(read_ssid, read_password);
+	read_ssid = credentials.ssid_field;
+	read_password = credentials.password_field;
+	
+	try{
+		if(credentials.ip!=null){
+			IPAddress = credentials.ip;
+			connectWifi(read_ssid, read_password);
+			net_conn = 1;
+			showNotification("ip!=null","");
+		}
+	}
+	catch(e){
+		console.log(e);
 	}
 });
 // sending Server's IP to downloadWindow
-ipcMain.on('read:IP', (event) => {
-	downloadWindow.webContents.send('read:IP', IPAddress);
+ipcMain.on('read:IPDownloadWin', (event) => {
+	downloadWindow.webContents.send('read:IPDownloadWin', IPAddress);
 });
+
+// sending Server's IP to networkRTKWindow
+ipcMain.on('read:IPNetworkWin', (event) => {
+	deviceSetupWindow.webContents.send('read:IPNetworkWin', IPAddress);
+});
+
 //send command
 ipcMain.on('make:command', (event, command) => {
 	// command = command + md5(command);
@@ -588,11 +620,14 @@ function sendOverWifi(command) {
 				if(response.data != "Incorrect Wi-FI Credentials. Please Check!"){
 					if(response.data != "0.0.0.0"){
 						IPAddress = response.data;
-						showNotification('Response from EZRTK', "Wi-Fi Setup Complete!");
+						showNotification('Response from EZRTK', "Wi-Fi Setup Complete!"+IPAddress);
 					}
 					console.log('Response, IP = ' + IPAddress);
 					if (response.data) {
 						connectWifi(read_ssid, read_password);
+						var wifi_to_setting = {read_ssid, read_password};
+						deviceSetupWindow.webContents.send('update:network', wifi_to_setting);
+						net_conn = 1;
 						var timer = setInterval(function () {
 							if (connType != 1) {
 								clearInterval(timer);

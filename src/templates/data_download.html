@@ -22,9 +22,9 @@
 	<script>
 		const { ipcRenderer } = require('electron');
 
-		ipcRenderer.send('read:IP');
+		ipcRenderer.send('read:IPDownloadWin');
 
-		ipcRenderer.on('read:IP', (event, IPAddress) => {
+		ipcRenderer.on('read:IPDownloadWin', (event, IPAddress) => {
 			console.log("IP: "+IPAddress);
 			fetch(`http://${IPAddress}/files`)
 				.then(function (response) {
